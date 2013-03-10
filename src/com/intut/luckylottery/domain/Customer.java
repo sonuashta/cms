@@ -5,31 +5,26 @@ import java.util.Date;
 public class Customer {
 
 	private String name;
-	private String code;
-	private String mobile1;
-	private String mobile2;
+	private int serialNumber;
+	private String series;
+	private String ticketNumber;
+	private String lotteryType;
+	private String bumperName;
+	private String phoneNumber;
 	private String address;
-	private String city;
-	private String state;
-	private String email;
-	private String zip;
-	private int lotterTypeId;
-	private boolean smsSend;
-	private Date createdDate;
-	private Date deletedDate;
+	private Date date;
+	private String emailId;
 
 	public Customer() {
 		this.name = "";
-		this.code = "";
-		this.mobile1 = "";
-		this.mobile2 = "";
+		this.series = "";
+		this.ticketNumber = "";
+		this.lotteryType = "";
+		this.bumperName = "";
+		this.phoneNumber = "";
 		this.address = "";
-		this.city = "";
-		this.state = "";
-		this.email = "";
-		this.zip = "";
-		this.createdDate = new Date();
-		this.deletedDate = null;
+		this.date = new Date();
+		this.emailId = "";
 	}
 
 	public String getName() {
@@ -40,28 +35,52 @@ public class Customer {
 		this.name = name;
 	}
 
-	public String getCode() {
-		return code;
+	public int getSerialNumber() {
+		return serialNumber;
 	}
 
-	public void setCode(String code) {
-		this.code = code;
+	public void setSerialNumber(int serialNumber) {
+		this.serialNumber = serialNumber;
 	}
 
-	public String getMobile1() {
-		return mobile1;
+	public String getSeries() {
+		return series;
 	}
 
-	public void setMobile1(String mobile1) {
-		this.mobile1 = mobile1;
+	public void setSeries(String series) {
+		this.series = series;
 	}
 
-	public String getMobile2() {
-		return mobile2;
+	public String getTicketNumber() {
+		return ticketNumber;
 	}
 
-	public void setMobile2(String mobile2) {
-		this.mobile2 = mobile2;
+	public void setTicketNumber(String ticketNumber) {
+		this.ticketNumber = ticketNumber;
+	}
+
+	public String getLotteryType() {
+		return lotteryType;
+	}
+
+	public void setLotteryType(String lotteryType) {
+		this.lotteryType = lotteryType;
+	}
+
+	public String getBumperName() {
+		return bumperName;
+	}
+
+	public void setBumperName(String bumperName) {
+		this.bumperName = bumperName;
+	}
+
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
 	}
 
 	public String getAddress() {
@@ -72,69 +91,20 @@ public class Customer {
 		this.address = address;
 	}
 
-	public String getCity() {
-		return city;
+	public Date getDate() {
+		return date;
 	}
 
-	public void setCity(String city) {
-		this.city = city;
+	public void setDate(Date date) {
+		this.date = date;
 	}
 
-	public String getState() {
-		return state;
+	public String getEmailId() {
+		return emailId;
 	}
 
-	public void setState(String state) {
-		this.state = state;
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
 	}
 
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getZip() {
-		return zip;
-	}
-
-	public void setZip(String zip) {
-		this.zip = zip;
-	}
-
-	public Date getCreatedDate() {
-		return createdDate;
-	}
-
-	public void setCreatedDate(Date createdDate) {
-		this.createdDate = createdDate;
-	}
-
-	public Date getDeletedDate() {
-		return deletedDate;
-	}
-
-	public void setDeletedDate(Date deletedDate) {
-		this.deletedDate = deletedDate;
-	}
-
-	public int getLotterTypeId() {
-		return lotterTypeId;
-	}
-
-	public void setLotterTypeId(int lotterTypeId) {
-		this.lotterTypeId = lotterTypeId;
-	}
-
-	public boolean isSmsSend() {
-		return smsSend;
-	}
-
-	public void setSmsSend(boolean smsSend) {
-		this.smsSend = smsSend;
-	}
-
-	
 }

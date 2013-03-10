@@ -6,7 +6,7 @@ import org.eclipse.wb.swt.ResourceManager;
 
 public class View extends ViewPart {
 	public View() {
-		setTitleImage(ResourceManager.getPluginImage("com.intut.luckylottery.cms", "icons/appIcons/branding/lottery_32.png"));
+		setPartName("Lucky Lottery");
 	}
 	public static final String ID = "com.intut.luckylottery.cms.view";
 

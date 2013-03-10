@@ -2,7 +2,10 @@ package com.intut.luckylottery.tests;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -13,22 +16,36 @@ public class DatabaseTest {
 
 	@Test
 	public void test() {
-		Dbloader loader = new Dbloader();
-		Customer customer = new Customer();
-		customer.setAddress("8/39");
-		customer.setCity("Delhi");
-		customer.setCode("12989");
-		customer.setCreatedDate(new Date());
-		customer.setDeletedDate(null);
-		customer.setEmail("k@gmail.com");
-		customer.setLotterTypeId(1);
-		customer.setMobile1("9213");
-		customer.setMobile2("98110");
-		customer.setName("keshav");
-		customer.setSmsSend(false);
-		customer.setState("New Delhi");
-		customer.setZip("110065");
-		loader.insertCustomer(customer);
+		System.out.println("Im in test");
+		 Dbloader loader = new Dbloader();
+		 loader.dropTables();
+		 ReadExcel test = new ReadExcel();
+		 try {
+		 List<Customer> customers = test.read(new File(
+		 "C:\\Users\\KESHAV\\Desktop\\cms\\test.xlsx"), "Monthly",
+		 "");
+		 File file = new File("");
+		 System.out.println(file.getAbsolutePath());
+		
+		 loader.insertbackupLotteries(customers);
+		 } catch (IOException e) {
+		 // TODO Auto-generated catch block
+		 e.printStackTrace();
+		 }
+
+	}
+
+	@Test
+	public void test1() {
+//		System.out.println("Im in test1");
+//		Dbloader loader = new Dbloader();
+//		loader.dropTables();
+//
+//		loader.init();
+//		String processName = "Holi";
+//		loader.insertProcess(processName);
+//		loader.createMessageTable(processName);
+
 	}
 
 }

@@ -8,6 +8,8 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
+import com.intut.luckylottery.cms.util.Util;
+
 public class Aboutdialog extends Dialog {
 
 	protected Object result;
@@ -48,7 +50,8 @@ public class Aboutdialog extends Dialog {
 	private void createContents() {
 		shell = new Shell(getParent(), SWT.NONE);
 		
-		shell.setSize(450, 300);
+//		shell.setSize(450, 300);
+		shell.setBounds(Util.setBouunds(450, 300));
 		shell.setText(getText());
 		
 		Composite composite = new Composite(shell, SWT.NONE);

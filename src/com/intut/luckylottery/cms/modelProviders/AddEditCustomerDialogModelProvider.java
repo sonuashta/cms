@@ -3,7 +3,6 @@
 //import java.beans.PropertyChangeListener;
 //import java.beans.PropertyChangeSupport;
 //import java.io.BufferedReader;
-//import java.io.File;
 //import java.io.IOException;
 //import java.io.InputStreamReader;
 //import java.lang.reflect.InvocationTargetException;
@@ -17,26 +16,23 @@
 //
 //import org.eclipse.core.databinding.observable.list.WritableList;
 //import org.eclipse.core.runtime.IProgressMonitor;
-//import org.eclipse.jface.dialogs.MessageDialog;
 //import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 //import org.eclipse.jface.operation.IRunnableWithProgress;
 //import org.eclipse.swt.widgets.Display;
-//import org.eclipse.swt.widgets.MessageBox;
-//import org.eclipse.swt.widgets.Shell;
 //
+//import com.intut.luckylottery.cms.dialogs.MultiCustomerDialog;
 //import com.intut.luckylottery.cms.util.LotteryLogger;
 //import com.intut.luckylottery.cms.util.Util;
-//import com.intut.luckylottery.crudDatabase.Dbloader;
 //import com.intut.luckylottery.domain.Customer;
 //import com.intut.luckylottery.domain.Lottery;
 //
 //import dummydata.GetDummyData;
 //
-//public class IndividualLotteryModelProvider {
+//public class AddEditCustomerDialogModelProvider {
 //
-//	public IndividualLotteryModelProvider() {
-//		dbloader = new Dbloader();
-//		customer = new Customer();
+//	public AddEditCustomerDialogModelProvider(Customer customer,MultiCustomerDialog multiCustomerDialog) {
+//		this.customer = customer;
+//		this.multiCustomerDialog=multiCustomerDialog;
 //		lotteryList = GetDummyData.getLotteryData();
 //		bumperList = new ArrayList<String>();
 //		codeList = new WritableList();
@@ -44,16 +40,15 @@
 //		lotteryNameList = new WritableList();
 //		for (Lottery lottery : lotteryList) {
 //			if (lottery.getType().equalsIgnoreCase("bumper"))
-//				bumperList.add(lottery.getName().toLowerCase());
+//				bumperList.add(lottery.getName());
 //		}
 //
 //		setType(new String[] { "monthly", "bumper" });
 //		monthlyList = new ArrayList<String>();
-//		monthlyList.add("Monthly");
+//		monthlyList.add("monthly");
 //
 //	}
 //
-//	private Dbloader dbloader;
 //	private String name;
 //	private String code;
 //	private String mobile1;
@@ -77,14 +72,16 @@
 //	private List<String> existingCodeList;
 //	private String selectedcode;
 //	private Customer customer;
+//	private String selectedBumper;
+//	private MultiCustomerDialog multiCustomerDialog;
 //
 //	public String getSelectedType() {
 //		return selectedType;
 //	}
 //
 //	public void setSelectedType(String selectedType) {
-//		propertyChangeSupport.firePropertyChange("selectedType",
-//				this.selectedType, this.selectedType = selectedType);
+//
+//		this.selectedType = selectedType;
 //	}
 //
 //	public String getName() {
@@ -175,7 +172,6 @@
 //
 //	private PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
 //			this);
-//	private String selectedBumper;
 //
 //	public void addPropertyChangeListener(String propertyName,
 //			PropertyChangeListener listener) {
@@ -270,14 +266,9 @@
 //
 //	}
 //
-//	private String commaSeperatedCodes() {
-//		String codes = "";
-//		for (String s : existingCodeList)
-//			codes += s + ",";
-//		return codes.replaceAll(",$", "");
-//	}
-//
 //	public void removeCode() {
+//		try{
+//			
 //		existingCodeList.remove(getSelectedcode());
 //		codeList.clear();
 //		codeList.addAll(existingCodeList);
@@ -285,7 +276,10 @@
 //
 //			setSelectedcode(existingCodeList.get(existingCodeList.size() - 1));
 //		if (existingCodeList.size() == 0)
-//			setRemoveButtonEnabled(false);
+//				setRemoveButtonEnabled(false);
+//		} catch (Exception e) {
+//			System.out.println();
+//			}
 //	}
 //
 //	public String getSelectedcode() {
@@ -304,27 +298,6 @@
 //		try {
 //			dialog.run(true, true, new IRunnableWithProgress() {
 //				public void run(IProgressMonitor monitor) {
-//					Customer customer = new Customer();
-//					if (!Util.isStringNullOrEmpty(address))
-//						customer.setAddress(getAddress());
-//					if (!Util.isStringNullOrEmpty(getCity()))
-//						customer.setCity(getCity());
-//					if (!Util.isStringNullOrEmpty(getCode()))
-//						customer.setCode(code);
-//					if (!Util.isStringNullOrEmpty(getEmail()))
-//						customer.setEmail(email);
-//					if (!Util.isStringNullOrEmpty(getMobile1()))
-//						customer.setMobile1(mobile1);
-//					if (!Util.isStringNullOrEmpty(getMobile2()))
-//						customer.setMobile2(mobile2);
-//					if (!Util.isStringNullOrEmpty(getName()))
-//						customer.setName(name);
-//					if (!Util.isStringNullOrEmpty(getState()))
-//						customer.setState(state);
-//					if (!Util.isStringNullOrEmpty(getZip()))
-//						customer.setZip(zip);
-//					customer.setCode(commaSeperatedCodes());
-//
 //					monitor.beginTask("Initializing Sending Process", 3); // begin
 //																			// task
 //					monitor.worked(1);
@@ -338,21 +311,10 @@
 //					}
 //
 //					monitor.setTaskName("Sending Message");
-//					boolean isMsgSend = sendSms(customer.getCode(), mobile1);
+//
 //					monitor.worked(2);
 //					monitor.setTaskName("Saving to database");
-//					try{
-//					dbloader.insertCustomer(customer);
-//					}catch (Exception e) {
-//						Display.getDefault().asyncExec(new Runnable() {
-//							
-//							@Override
-//							public void run() {
-//								MessageDialog.openError(new Shell(), "error", "Error in saving to database");
-//								
-//							}
-//						});
-//					}
+//
 //					monitor.setTaskName("Done");
 //
 //					monitor.done();
@@ -370,62 +332,26 @@
 //
 //	}
 //
-//	private String filterMessageText(String ids) {
-//		String messageText = "Thanks for buying ticket(s) with Lucky Lottery.\n";
-//		String s[] = ids.split(",");
-//		if (s.length >= 5)
-//			messageText += "Total No. of tickets bought is: " + s.length;
-//		else
-//			messageText += "Your ticket no.s are " + ids;
-//		return messageText;
+//	public void save(){
+//		customer.setAddress(getAddress());
+//		customer.setCity(city);
+//		customer.setCode(commaSeperatedCodes());
+//		customer.setEmail(email);
+//		customer.setLotterTypeId(Util.getLotteryId(selectedType, selectedBumper));
+//		customer.setMobile1(mobile1);
+//		customer.setMobile2(mobile2);
+//		customer.setName(name);
+//		customer.setState(state);
+//		customer.setZip(zip);
+//		
+//		multiCustomerDialog.reAllocateItems();
 //	}
-//
-//	public boolean sendSms(String messageText, String number) {
-//		String str;
-//
-//		if (Util.isStringNullOrEmpty(messageText))
-//			messageText = "empty";
-//		try {
-//			URI uri = new URI("http", messageText, "");
-//
-//			// URL onlyMsgUrl = uri.toURL();
-//
-//			URL msgUrl = new URL(
-//					"http://www.smszone.in/sendsms.asp?page=SendSmsBulk&username="
-//							+ Util.getUserName() + "&password="
-//							+ Util.getPassword() + "&number=91" + number
-//							+ "&message=" + uri.toString().replace("http:", ""));
-//
-//			HttpURLConnection connection = (HttpURLConnection) msgUrl
-//					.openConnection();
-//			connection.setDoOutput(false);
-//			connection.setDoInput(true);
-//
-//			String res = connection.getResponseMessage();
-//			System.out.println(res);
-//			String returnstring = "";
-//			int code = connection.getResponseCode();
-//
-//			if (code == HttpURLConnection.HTTP_OK) {
-//				// Get response data.
-//				BufferedReader in = new BufferedReader(new InputStreamReader(
-//						connection.getInputStream()));
-//
-//				while (null != ((str = in.readLine()))) {
-//					returnstring = returnstring + str;
-//				}
-//			}
-//			connection.disconnect();
-//			if (returnstring.equals("SUCCESS"))
-//				return true;
-//		} catch (IOException e) {
-//			return false;
-//		} catch (URISyntaxException e) {
-//			return false;
-//		}
-//		return false;
+//	private String commaSeperatedCodes(){
+//		String codes="";
+//		for(String s:existingCodeList)
+//			codes+=s+",";
+//		return codes.replaceAll(",$", "");
 //	}
-//
 //	public boolean sendSms() {
 //		String str;
 //		String messageText = "";
@@ -477,17 +403,6 @@
 //		return "1234567890";
 //	}
 //
-//	public void addCodesFromCSV(File file) {
-//		try {
-//			this.customer = Util.readCustomerFromCsv(file);
-//			loadCustomerData();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//	}
-//
 //	public void loadCustomerData() {
 //		setAddress(customer.getAddress());
 //		setCity(customer.getCity());
@@ -510,7 +425,7 @@
 //		setState(customer.getState());
 //		setZip(customer.getZip());
 //		setSelectedBumper(extractBumperName());
-//
+//		
 //	}
 //
 //	private String extractBumperName() {
@@ -544,18 +459,4 @@
 //		propertyChangeSupport.firePropertyChange("selectedBumper",
 //				this.selectedBumper, this.selectedBumper = selectedBumper);
 //	}
-//
-//	public boolean verifyEntry() {
-//		boolean isvalid = true;
-//		if (existingCodeList.size() == 0)
-//			isvalid = false;
-//		if (Util.isStringNullOrEmpty(selectedBumper))
-//			isvalid = false;
-//		if (Util.isStringNullOrEmpty(selectedBumper))
-//			isvalid = false;
-//		if (Util.isStringNullOrEmpty(mobile1))
-//			isvalid = false;
-//		return isvalid;
-//	}
-//
 //}

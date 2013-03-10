@@ -22,7 +22,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="View"
+            name="Lucky Lottery"
             class="com.intut.luckylottery.cms.View"
             id="com.intut.luckylottery.cms.view">
       </view>
@@ -52,6 +52,38 @@
             </command>
          </menu>
       </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="com.intut.luckylottery.cms.toolbar2">
+            <command
+                  commandId="com.intut.luckylottery.cms.singleCustomerCommand"
+                  label="Single Lottery Command"
+                  mode="FORCE_TEXT"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.intut.luckylottery.cms.multiCustomerCommand"
+                  label="MulticustomerCommand"
+                  mode="FORCE_TEXT"
+                  style="push">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="com.intut.luckylottery.cms.commands.SingleCustomerCommand"
+            id="com.intut.luckylottery.cms.singleCustomerCommand"
+            name="Single Customer Command">
+      </command>
+      <command
+            defaultHandler="com.intut.luckylottery.cms.commands.MultiCustomerCommand"
+            id="com.intut.luckylottery.cms.multiCustomerCommand"
+            name="Multi Customer Command">
+      </command>
    </extension>
 
 </plugin>

@@ -27,4 +27,11 @@ public class GetDummyData {
 		return list;
 	}
 
+	public static String[] getBumperNames() {
+		return new String[] { "Diwali", "Baisakhi", "Holi" };
+	}
+
+	public static int getSerialNumber() {
+		return 123456;
+	}
 }
