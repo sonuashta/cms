@@ -6,11 +6,9 @@ import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.commands.IHandlerListener;
 import org.eclipse.swt.widgets.Shell;
 
-import com.intut.luckylottery.cms.dialogs.DataLoaderDialog;
 import com.intut.luckylottery.cms.dialogs.ProcessesDialog;
-import com.intut.luckylottery.cms.dialogs.ProgressDialog;
 
-public class MultiCustomerCommand implements IHandler {
+public class ProcessesCommand implements IHandler {
 
 	@Override
 	public void addHandlerListener(IHandlerListener handlerListener) {
@@ -26,10 +24,8 @@ public class MultiCustomerCommand implements IHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		 DataLoaderDialog dialog = new DataLoaderDialog(new Shell());
-		
-		// MultiCustomerDialog dialog = new MultiCustomerDialog(new Shell());
-		 dialog.open();
+		ProcessesDialog dialog = new ProcessesDialog(new Shell());
+		dialog.open();
 		return null;
 	}
 

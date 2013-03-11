@@ -59,13 +59,22 @@
                id="com.intut.luckylottery.cms.toolbar2">
             <command
                   commandId="com.intut.luckylottery.cms.singleCustomerCommand"
-                  label="Single Lottery Command"
+                  icon="icons/appIcons/toolbar/edit-user.png"
+                  label="Single Lottery"
                   mode="FORCE_TEXT"
                   style="push">
             </command>
             <command
                   commandId="com.intut.luckylottery.cms.multiCustomerCommand"
-                  label="MulticustomerCommand"
+                  icon="icons/appIcons/toolbar/family.png"
+                  label="Backup Customers"
+                  mode="FORCE_TEXT"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.intut.luckylottery.cms.processesCommand"
+                  icon="icons/appIcons/toolbar/process-icon.png"
+                  label="Processes"
                   mode="FORCE_TEXT"
                   style="push">
             </command>
@@ -84,6 +93,39 @@
             id="com.intut.luckylottery.cms.multiCustomerCommand"
             name="Multi Customer Command">
       </command>
+      <command
+            defaultHandler="com.intut.luckylottery.cms.commands.ProcessesCommand"
+            id="com.intut.luckylottery.cms.processesCommand"
+            name="Process Command">
+      </command>
+   </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="com.intut.luckylottery.cms.application"
+            name="CMS">
+         <property
+               name="appName"
+               value="CMS">
+         </property>
+         <property
+               name="startupForegroundColor"
+               value="000000">
+         </property>
+         <property
+               name="startupMessageRect"
+               value="10,240,350,20">
+         </property>
+         <property
+               name="startupProgressRect"
+               value="5,265,388,20">
+         </property>
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
+      </product>
    </extension>
 
 </plugin>

@@ -2,15 +2,23 @@ package com.intut.luckylottery.cms.modelProviders;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.List;
 
+import org.eclipse.swt.widgets.Display;
+
+import com.intut.luckylottery.cms.dialogs.ProcessesProgressDialog;
 import com.intut.luckylottery.crudDatabase.Dbloader;
+import com.intut.luckylottery.domain.Customer;
 
 public class ProcessDialogModelProvider {
 	public ProcessDialogModelProvider(String processName) {
 		setName(processName);
 		dbLoader = new Dbloader();
-//		setTotal(""+dbLoader.getUniqueCustomersMessagesCountFromTable());
-//		setLeftProcesses(""+dbLoader.getUniqueCustomersMessagesCountFromTable());
+		setTotal("" + dbLoader.getUniqueCustomersMessagesCount());
+		setLeftProcesses(""
+				+ dbLoader.getUniqueMessagesCountFromTable(processName));
+		setLeftMails("" + dbLoader.getUniqueMailsCountFromTable(processName));
+		setTotalEmails("" + dbLoader.getUniqueCustomersMailsCount());
 	}
 
 	private Dbloader dbLoader;
@@ -18,6 +26,7 @@ public class ProcessDialogModelProvider {
 	private String total;
 	private String leftProcesses;
 	private String leftMails;
+	private String totalEmails;
 
 	public String getName() {
 		return name;
@@ -65,6 +74,30 @@ public class ProcessDialogModelProvider {
 	public void setLeftMails(String leftMails) {
 		propertyChangeSupport.firePropertyChange("leftMails", this.leftMails,
 				this.leftMails = leftMails);
+	}
+
+	public String getTotalEmails() {
+		return totalEmails;
+	}
+
+	public void setTotalEmails(String totalEmails) {
+		propertyChangeSupport.firePropertyChange("totalEmails",
+				this.totalEmails, this.totalEmails = totalEmails);
+	}
+
+	public void processMessages() {
+		List<Customer> customers = dbLoader
+				.getUniqueMessagesFromTable(getName());
+		ProcessesProgressDialog dialog = new ProcessesProgressDialog(Display
+				.getCurrent().getActiveShell(), customers, false, "");
+		dialog.open();
+	}
+	public void processMails() {
+		List<Customer> customers = dbLoader
+				.getUniqueMailsFromTable(getName());
+		ProcessesProgressDialog dialog = new ProcessesProgressDialog(Display
+				.getCurrent().getActiveShell(), customers, true, "");
+		dialog.open();
 	}
 
 }

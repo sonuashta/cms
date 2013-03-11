@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.intut.luckylottery.cms.util.Constants;
+import com.intut.luckylottery.cms.util.LotteryLogger;
 import com.intut.luckylottery.cms.util.Util;
 import com.intut.luckylottery.domain.Customer;
 import com.intut.luckylottery.domain.Fields;
@@ -50,7 +51,7 @@ public class Dbloader {
 					.executeQuery("select max(serialNumber) as serialNumber from customer");
 
 			while (rs.next()) {
-				serialNumber = rs.getInt(0);
+				serialNumber = rs.getInt("serialNumber");
 			}
 
 			rs.close();
@@ -194,22 +195,22 @@ public class Dbloader {
 			Connection conn = getConnection();
 			Statement stat = conn.createStatement();
 			ResultSet rs = stat
-					.executeQuery("select *  from customer where phoneNumber not in "
+					.executeQuery("select name , phoneNumber  from customer where phoneNumber not in "
 							+ "(select phoneNumber from "
 							+ tableName
 							+ "Messages where "
 							+ "isSend=0 or status='"
 							+ Constants.failedMessaage
-							+ "')ORDER BY id LIMIT 0, 1000");
+							+ "') and phoneNumber!='' group by phoneNumber ORDER BY id LIMIT 0, 1000");
 
 			while (rs.next()) {
 				Customer customer = new Customer();
 
 				customer.setName(rs.getString(Fields.name) == null ? "" : rs
 						.getString(Fields.name));
-				customer.setName(rs.getString(Fields.phoneNumber) == null ? ""
+				customer.setPhoneNumber(rs.getString(Fields.phoneNumber) == null ? ""
 						: rs.getString(Fields.phoneNumber));
-
+				customers.add(customer);
 			}
 
 			rs.close();
@@ -231,13 +232,42 @@ public class Dbloader {
 			Connection conn = getConnection();
 			Statement stat = conn.createStatement();
 			ResultSet rs = stat
-					.executeQuery("select count(id) as count from customer where phoneNumber not in "
+					.executeQuery("select count(DISTINCT phoneNumber) as count from customer where phoneNumber not in "
 							+ "(select phoneNumber from "
 							+ tableName
 							+ "Messages where "
 							+ "isSend=0 or status='"
 							+ Constants.failedMessaage
-							+ "') and where phoneNumber!=''");
+							+ "') and phoneNumber!=''");
+
+			while (rs.next()) {
+				count = rs.getInt("count");
+
+			}
+
+			rs.close();
+			stat.close();
+			conn.setAutoCommit(true);
+			conn.close();
+			return count;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+
+	public int getUniqueMailsCountFromTable(String tableName) {
+
+		int count = 0;
+		try {
+			createMessageTable(tableName);
+			Connection conn = getConnection();
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat
+					.executeQuery("select count(DISTINCT emailId) as count from customer where emailId not in "
+							+ "(select emailId from "
+							+ tableName
+							+ "Mails where " + "isSend=0) and emailId!=''");
 
 			while (rs.next()) {
 				count = rs.getInt("count");
@@ -281,6 +311,32 @@ public class Dbloader {
 		}
 	}
 
+	public int getUniqueCustomersMailsCount() {
+
+		int count = 0;
+		try {
+
+			Connection conn = getConnection();
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat
+					.executeQuery("select count(DISTINCT emailId) as count from customer where emailId!=''");
+
+			while (rs.next()) {
+				count = rs.getInt("count");
+
+			}
+
+			rs.close();
+			stat.close();
+			conn.setAutoCommit(true);
+			conn.close();
+			return count;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+
 	public List<Customer> getUniqueMailsFromTable(String tableName) {
 		List<Customer> customers = new ArrayList<Customer>();
 
@@ -290,21 +346,19 @@ public class Dbloader {
 			Statement stat = conn.createStatement();
 			ResultSet rs = stat
 					.executeQuery("select name,emailId  from customer where phoneNumber not in "
-							+ "(select phoneNumber from "
+							+ "(select emailId from "
 							+ tableName
 							+ "Mails where "
-							+ "isSend=0 or status='"
-							+ Constants.failedMessaage
-							+ "')ORDER BY id LIMIT 0, 1000");
+							+ "isSend=0 )  and emailId!=''  group by emailId ORDER BY id LIMIT 0, 1000");
 
 			while (rs.next()) {
 				Customer customer = new Customer();
 
 				customer.setName(rs.getString(Fields.name) == null ? "" : rs
 						.getString(Fields.name));
-				customer.setName(rs.getString(Fields.emailId) == null ? "" : rs
+				customer.setEmailId(rs.getString(Fields.emailId) == null ? "" : rs
 						.getString(Fields.emailId));
-
+				customers.add(customer);
 			}
 
 			rs.close();
@@ -318,11 +372,28 @@ public class Dbloader {
 		}
 	}
 
-	public void insertProcess(String processName) {
+	public boolean insertProcess(String processName) throws Exception {
 		try {
 			init();
 			Connection conn = getConnection();
 
+			try {
+				Statement stat = conn.createStatement();
+				ResultSet rs = stat
+						.executeQuery("select id  from processes where processName='"
+								+ processName + "'");
+
+				while (rs.next()) {
+					rs.close();
+					stat.close();
+					conn.close();
+					return false;
+
+				}
+			} catch (Exception e) {
+				LotteryLogger.getInstance().setError(
+						"Error in checking process " + e.getMessage());
+			}
 			PreparedStatement prep = conn
 					.prepareStatement("insert into processes values ( null,"
 							+ "?,?, ?,?);");
@@ -337,13 +408,57 @@ public class Dbloader {
 			conn.setAutoCommit(true);
 			prep.close();
 			conn.close();
+
 		}
 
 		catch (Exception e) {
+			LotteryLogger.getInstance().setError("Error in inserting process");
+			throw new Exception(e);
+
+		}
+		return true;
+	}
+
+	public List<String> getProcesses() {
+		List<String> processes = new ArrayList<String>();
+		try {
+
+			Connection conn = getConnection();
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat.executeQuery("select * from processes");
+
+			while (rs.next()) {
+				processes.add(rs.getString("processName"));
+			}
+
+			rs.close();
+			stat.close();
+			conn.setAutoCommit(true);
+			conn.close();
+
+		} catch (Exception e) {
 			e.printStackTrace();
 
 		}
+		return processes;
+	}
 
+	public void deleteProcess(String processName) {
+		try {
+			Connection conn = getConnection();
+			String sql = "UPDATE processes SET deletedDate = ? ,updatedDate = ? WHERE processName='"
+					+ processName + "'";
+			PreparedStatement prest = conn.prepareStatement(sql);
+			prest.setString(0, Util.formatDate(new Date()));
+
+			prest.setString(1, Util.formatDate(new Date()));
+
+			prest.executeUpdate();
+			conn.close();
+		} catch (Exception e) {
+			LotteryLogger.getInstance().setError(
+					"Error in updating process delete date" + e.getMessage());
+		}
 	}
 
 	public void updateMessageOfTable(String table, boolean isSend,
