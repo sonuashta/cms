@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
@@ -23,23 +25,50 @@ public class ReadExcel {
 		List<Customer> customers = new ArrayList<Customer>();
 		try {
 
-			FileInputStream fis = null;
-			fis = new FileInputStream(file);
-			XSSFWorkbook workbook = new XSSFWorkbook(fis);
-			XSSFSheet sheet = workbook.getSheetAt(0);
-			boolean isFirst = true;
-			for (Row row : sheet) {
-				if (isFirst) {
-					isFirst = false;
-					continue;
+			if (file.getName().endsWith(".xls")
+					|| file.getName().endsWith(".XLS")) {
+				FileInputStream fis = null;
+				fis = new FileInputStream(file);
+				// Get the workbook instance for XLS file
+				HSSFWorkbook workbook = new HSSFWorkbook(fis);
+
+				// Get first sheet from the workbook
+				HSSFSheet sheet = workbook.getSheetAt(0);
+
+				boolean isFirst = true;
+				for (Row row : sheet) {
+					if (isFirst) {
+						isFirst = false;
+						continue;
+					}
+					Customer customer = new Customer();
+					if (!Util.isStringNullOrEmpty(bumperName))
+						customer.setBumperName(bumperName);
+					customer.setLotteryType(lotteryType);
+					if (readColumns(row, customer) != null)
+						customers.add(customer);
 				}
-				Customer customer = new Customer();
-				if (!Util.isStringNullOrEmpty(bumperName))
-					customer.setBumperName(bumperName);
-				customer.setLotteryType(lotteryType);
-				if (readColumns(row, customer) != null)
-					customers.add(customer);
+			} else if (file.getName().endsWith(".xlsx")
+					|| file.getName().endsWith(".XLSX")) {
+				FileInputStream fis = null;
+				fis = new FileInputStream(file);
+				XSSFWorkbook workbook = new XSSFWorkbook(fis);
+				XSSFSheet sheet = workbook.getSheetAt(0);
+				boolean isFirst = true;
+				for (Row row : sheet) {
+					if (isFirst) {
+						isFirst = false;
+						continue;
+					}
+					Customer customer = new Customer();
+					if (!Util.isStringNullOrEmpty(bumperName))
+						customer.setBumperName(bumperName);
+					customer.setLotteryType(lotteryType);
+					if (readColumns(row, customer) != null)
+						customers.add(customer);
+				}
 			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			LotteryLogger.getInstance().setError(

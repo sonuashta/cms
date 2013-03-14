@@ -27,6 +27,7 @@ public class ProcessDialogModelProvider {
 	private String leftProcesses;
 	private String leftMails;
 	private String totalEmails;
+	private String message;
 
 	public String getName() {
 		return name;
@@ -89,15 +90,34 @@ public class ProcessDialogModelProvider {
 		List<Customer> customers = dbLoader
 				.getUniqueMessagesFromTable(getName());
 		ProcessesProgressDialog dialog = new ProcessesProgressDialog(Display
-				.getCurrent().getActiveShell(), customers, false, "");
+				.getCurrent().getActiveShell(), customers, false, getMessage(),
+				name,this);
 		dialog.open();
 	}
+
 	public void processMails() {
-		List<Customer> customers = dbLoader
-				.getUniqueMailsFromTable(getName());
+		List<Customer> customers = dbLoader.getUniqueMailsFromTable(getName());
 		ProcessesProgressDialog dialog = new ProcessesProgressDialog(Display
-				.getCurrent().getActiveShell(), customers, true, "");
+				.getCurrent().getActiveShell(), customers, true, "", name,this);
 		dialog.open();
+		
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void resetData() {
+		setTotal("" + dbLoader.getUniqueCustomersMessagesCount());
+		setLeftProcesses("" + dbLoader.getUniqueMessagesCountFromTable(name));
+		setLeftMails("" + dbLoader.getUniqueMailsCountFromTable(name));
+		setTotalEmails("" + dbLoader.getUniqueCustomersMailsCount());
+		setMessage("");
+	}
+
+	public void setMessage(String message) {
+		propertyChangeSupport.firePropertyChange("message", this.message,
+				this.message = message);
 	}
 
 }

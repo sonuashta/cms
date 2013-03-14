@@ -31,7 +31,7 @@ public final class Util {
 	public static Rectangle setBouunds(int x, int y) {
 		Rectangle r = new Rectangle((int) Toolkit.getDefaultToolkit()
 				.getScreenSize().getWidth()
-				/ 2 - x / 2, 200, x, y);
+				/ 2 - x / 2, 150, x, y);
 		return r;
 	}
 
@@ -96,13 +96,16 @@ public final class Util {
 	}
 
 	public static String getUserName() {
-		return "9811090740";
+		return "lucky1";
 	}
 
 	public static String getPassword() {
-		return "papa";
+		return "lucky1";
 	}
 
+	public static String getSenderName(){
+		return "LUCKYZ";
+	}
 	public static int getLotteryId(String type, String bumper) {
 		for (Lottery lottery : GetDummyData.getLotteryData()) {
 			if (lottery.getName().equals(bumper)

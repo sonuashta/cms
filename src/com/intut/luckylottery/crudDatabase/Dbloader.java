@@ -20,7 +20,7 @@ public class Dbloader {
 			connection = DriverManager.getConnection("jdbc:sqlite:lottery.db");
 			return connection;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError("Error");
 			return null;
 		}
 	}
@@ -36,7 +36,7 @@ public class Dbloader {
 			conn.close();
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError("");
 
 		}
 	}
@@ -58,7 +58,8 @@ public class Dbloader {
 			conn.close();
 
 		} catch (Exception e) {
-			// TODO: handle exception
+			LotteryLogger.getInstance().setError(
+					"Error in getting serial Number");
 		}
 		return ++serialNumber;
 	}
@@ -94,7 +95,9 @@ public class Dbloader {
 			conn.close();
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError(
+					"Error in creating table customer and prrocesses,"
+							+ e.getMessage());
 			return false;
 		}
 		return true;
@@ -123,7 +126,8 @@ public class Dbloader {
 			conn.close();
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError(
+					"Error in creating message tables," + e.getMessage());
 		}
 
 	}
@@ -134,39 +138,52 @@ public class Dbloader {
 			Connection conn = getConnection();
 
 			for (Customer customer : customers) {
+				try {
+					PreparedStatement prep = conn
+							.prepareStatement("insert into customer values ( null,"
+									+ "?,"
+									+ "?,"
+									+ "?,"
+									+ " ?,"
+									+ "?,"
+									+ " ?,"
+									+ "?,"
+									+ "? ,"
+									+ "? ,"
+									+ "?,"
+									+ "?,"
+									+ "?,"
+									+ "? , ?, ?);");
 
-				PreparedStatement prep = conn
-						.prepareStatement("insert into customer values ( null,"
-								+ "?," + "?," + "?," + " ?," + "?," + " ?,"
-								+ "?," + "? ," + "? ," + "?," + "?," + "?,"
-								+ "? , ?, ?);");
-
-				prep.setInt(1, customer.getSerialNumber());
-				prep.setString(2, customer.getSeries());
-				prep.setString(3, customer.getTicketNumber());
-				prep.setString(4, customer.getName());
-				prep.setString(5, customer.getLotteryType());
-				prep.setString(6, customer.getBumperName());
-				prep.setString(7, customer.getPhoneNumber());
-				prep.setString(8, customer.getEmailId());
-				prep.setString(9, customer.getAddress());
-				prep.setBoolean(10, false);
-				prep.setBoolean(11, false);
-				prep.setString(12, Constants.backupMessage);
-				prep.setString(13, Util.formatDate(customer.getDate()));
-				prep.setString(14, Util.formatDate(new Date()));
-				prep.setString(15, Util.formatDate(new Date()));
-				prep.addBatch();
-				conn.setAutoCommit(false);
-				prep.executeBatch();
-				conn.setAutoCommit(true);
-				prep.close();
-
+					prep.setInt(1, customer.getSerialNumber());
+					prep.setString(2, customer.getSeries());
+					prep.setString(3, customer.getTicketNumber());
+					prep.setString(4, customer.getName());
+					prep.setString(5, customer.getLotteryType());
+					prep.setString(6, customer.getBumperName());
+					prep.setString(7, customer.getPhoneNumber());
+					prep.setString(8, customer.getEmailId());
+					prep.setString(9, customer.getAddress());
+					prep.setBoolean(10, false);
+					prep.setBoolean(11, false);
+					prep.setString(12, Constants.backupMessage);
+					prep.setString(13, Util.formatDate(customer.getDate()));
+					prep.setString(14, Util.formatDate(new Date()));
+					prep.setString(15, Util.formatDate(new Date()));
+					prep.addBatch();
+					conn.setAutoCommit(false);
+					prep.executeBatch();
+					conn.setAutoCommit(true);
+					prep.close();
+				} catch (Exception e) {
+					LotteryLogger.getInstance().setError(
+							"Error in inserting customer," + e.getMessage());
+				}
 			}
 			conn.close();
 		} catch (Exception e) {
-			e.printStackTrace();
-
+			LotteryLogger.getInstance().setError(
+					"Error in inserting customers," + e.getMessage());
 		}
 	}
 
@@ -183,7 +200,38 @@ public class Dbloader {
 
 			stat.close();
 		} catch (Exception e) {
+			LotteryLogger.getInstance().setError(
+					"Error in dummy Data," + e.getMessage());
+		}
+	}
 
+	public void insertMessageData(String tableName, Customer customer,
+			boolean isSend, String status) {
+		try {
+			Connection conn = getConnection();
+
+			PreparedStatement prep = conn
+					.prepareStatement("insert or ignore into " + tableName
+							+ "Messages values(null,?,?,?,?,?,?,?);");
+
+			prep.setString(1, customer.getName());
+
+			prep.setString(2, customer.getPhoneNumber());
+			prep.setBoolean(3, isSend);
+			prep.setString(4, status);
+			prep.setString(5, Util.formatDate(new Date()));
+			prep.setString(6, Util.formatDate(new Date()));
+			prep.addBatch();
+			conn.setAutoCommit(false);
+			prep.executeBatch();
+			conn.setAutoCommit(true);
+			prep.close();
+			conn.close();
+
+		} catch (Exception e) {
+			LotteryLogger.getInstance().setError(
+					"error in saving to database process customer, "
+							+ e.getMessage());
 		}
 	}
 
@@ -199,7 +247,7 @@ public class Dbloader {
 							+ "(select phoneNumber from "
 							+ tableName
 							+ "Messages where "
-							+ "isSend=0 or status='"
+							+ "isSend=1 or status!='"
 							+ Constants.failedMessaage
 							+ "') and phoneNumber!='' group by phoneNumber ORDER BY id LIMIT 0, 1000");
 
@@ -219,8 +267,9 @@ public class Dbloader {
 			conn.close();
 			return customers;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			LotteryLogger.getInstance().setError(
+					"Error in getting unique numbers ");
+			return customers;
 		}
 	}
 
@@ -236,7 +285,7 @@ public class Dbloader {
 							+ "(select phoneNumber from "
 							+ tableName
 							+ "Messages where "
-							+ "isSend=0 or status='"
+							+ "isSend=1 or status !='"
 							+ Constants.failedMessaage
 							+ "') and phoneNumber!=''");
 
@@ -251,7 +300,9 @@ public class Dbloader {
 			conn.close();
 			return count;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError(
+					"Error in getting messages count from table" + tableName
+							+ ", " + e.getMessage());
 			return -1;
 		}
 	}
@@ -280,7 +331,9 @@ public class Dbloader {
 			conn.close();
 			return count;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError(
+					"Error in getting messages count from table" + tableName
+							+ ", " + e.getMessage());
 			return -1;
 		}
 	}
@@ -306,7 +359,8 @@ public class Dbloader {
 			conn.close();
 			return count;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError(
+					"Error in getting message count ," + e.getMessage());
 			return -1;
 		}
 	}
@@ -332,7 +386,8 @@ public class Dbloader {
 			conn.close();
 			return count;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError(
+					"Error in getting mails count ," + e.getMessage());
 			return -1;
 		}
 	}
@@ -356,8 +411,8 @@ public class Dbloader {
 
 				customer.setName(rs.getString(Fields.name) == null ? "" : rs
 						.getString(Fields.name));
-				customer.setEmailId(rs.getString(Fields.emailId) == null ? "" : rs
-						.getString(Fields.emailId));
+				customer.setEmailId(rs.getString(Fields.emailId) == null ? ""
+						: rs.getString(Fields.emailId));
 				customers.add(customer);
 			}
 
@@ -367,8 +422,9 @@ public class Dbloader {
 			conn.close();
 			return customers;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			LotteryLogger.getInstance().setError(
+					"Error in getting unique mails count ," + e.getMessage());
+			return customers;
 		}
 	}
 
@@ -413,7 +469,7 @@ public class Dbloader {
 
 		catch (Exception e) {
 			LotteryLogger.getInstance().setError("Error in inserting process");
-			throw new Exception(e);
+			return false;
 
 		}
 		return true;
@@ -437,7 +493,7 @@ public class Dbloader {
 			conn.close();
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError("Error in getting processes");
 
 		}
 		return processes;
@@ -477,7 +533,9 @@ public class Dbloader {
 			prest.executeUpdate();
 			conn.close();
 		} catch (Exception e) {
-			// TODO: handle exception
+			LotteryLogger.getInstance().setError(
+					"Error in updating message table where table is" + table
+							+ e.getMessage());
 		}
 	}
 
@@ -497,7 +555,9 @@ public class Dbloader {
 			prest.executeUpdate();
 			conn.close();
 		} catch (Exception e) {
-			// TODO: handle exception
+			LotteryLogger.getInstance().setError(
+					"Error in updating mails table where table is" + table
+							+ e.getMessage());
 		}
 	}
 
@@ -558,7 +618,8 @@ public class Dbloader {
 			}
 			conn.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError(
+					"Error in inserting backup dates" + e.getMessage());
 
 		}
 	}
@@ -580,8 +641,9 @@ public class Dbloader {
 							+ "? , ?, ?,?);");
 
 			prep.setInt(1, customer.getSerialNumber());
-			prep.setString(2, customer.getSeries());
-			prep.setString(3, customer.getTicketNumber());
+			prep.setString(2, "");
+			prep.setString(3, customer.getSeries().trim()
+					+ customer.getTicketNumber().trim());
 			prep.setString(4, customer.getName());
 			prep.setString(5, customer.getLotteryType());
 			prep.setString(6, customer.getBumperName());
@@ -601,7 +663,8 @@ public class Dbloader {
 			prep.close();
 			conn.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LotteryLogger.getInstance().setError(
+					"Error in updating customer" + e.getMessage());
 		}
 	}
 
@@ -658,8 +721,8 @@ public class Dbloader {
 			}
 			conn.close();
 		} catch (Exception e) {
-			e.printStackTrace();
-
+			LotteryLogger.getInstance().setError(
+					"Error in inserting pending customers" + e.getMessage());
 		}
 
 	}

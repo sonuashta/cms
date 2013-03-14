@@ -10,6 +10,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.intut.luckylottery.cms.customEvents.PropertyChangeEvent;
 import com.intut.luckylottery.cms.customEvents.PropertyChangeListener;
+import com.intut.luckylottery.cms.modelProviders.ProcessDialogModelProvider;
 import com.intut.luckylottery.cms.modelProviders.ProcessesProgressDialogModelProvider;
 import com.intut.luckylottery.cms.modelProviders.ProgressDialogModelProvider;
 import com.intut.luckylottery.cms.util.Util;
@@ -37,6 +38,7 @@ public class ProcessesProgressDialog extends Dialog {
 	private ProgressBar progressBar;
 	private Label lblProgress;
 
+
 	/**
 	 * Create the dialog.
 	 * 
@@ -44,11 +46,11 @@ public class ProcessesProgressDialog extends Dialog {
 	 * @param style
 	 */
 	public ProcessesProgressDialog(Shell parent, List<Customer> customers,
-			boolean isMail, String text) {
+			boolean isMail, String text,String tableName , ProcessDialogModelProvider proceesDailogModelProvider) {
 		super(parent);
 		setText("SWT Dialog");
 		modelProvider = new ProcessesProgressDialogModelProvider(customers,
-				isMail, text);
+				isMail, text,tableName,proceesDailogModelProvider);
 	}
 
 	/**

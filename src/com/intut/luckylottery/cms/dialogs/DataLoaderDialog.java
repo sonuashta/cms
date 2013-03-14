@@ -31,6 +31,7 @@ import com.intut.luckylottery.domain.Fields;
 import com.intut.luckylottery.tests.ReadExcel;
 
 import dummydata.GetDummyData;
+import org.eclipse.wb.swt.SWTResourceManager;
 
 public class DataLoaderDialog extends Dialog {
 
@@ -75,8 +76,11 @@ public class DataLoaderDialog extends Dialog {
 	 */
 	private void createContents() {
 		String comboItems[] = GetDummyData.getBumperNames();
-		shlUploadFiles = new Shell(getParent());
-		shlUploadFiles.setSize(450, 412);
+//		shlUploadFiles = new Shell(getParent());
+//		shlUploadFiles.setSize(450, 412);
+		shlUploadFiles = new Shell(getParent(),SWT.DIALOG_TRIM 
+				| SWT.APPLICATION_MODAL);
+		shlUploadFiles.setBounds(Util.setBouunds(450, 412));
 		shlUploadFiles.setText("Upload Files");
 		shlUploadFiles.setLayout(new FormLayout());
 
@@ -96,11 +100,12 @@ public class DataLoaderDialog extends Dialog {
 		composite.setLayout(new FormLayout());
 
 		Label lblChooseFile = new Label(composite, SWT.NONE);
+		lblChooseFile.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		FormData fd_lblChooseFile = new FormData();
 		fd_lblChooseFile.top = new FormAttachment(0, 10);
 		fd_lblChooseFile.left = new FormAttachment(0, 10);
 		lblChooseFile.setLayoutData(fd_lblChooseFile);
-		lblChooseFile.setText("Choose File");
+		lblChooseFile.setText("Choose Bumper File");
 
 		monMonthlyText = new Text(composite, SWT.BORDER);
 		FormData fd_monMonthlyText = new FormData();
@@ -126,6 +131,7 @@ public class DataLoaderDialog extends Dialog {
 		btnBrowse.setText("Browse");
 
 		Label lblChooseBumperType = new Label(composite, SWT.NONE);
+		lblChooseBumperType.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		FormData fd_lblChooseBumperType = new FormData();
 		fd_lblChooseBumperType.top = new FormAttachment(monMonthlyText, 6);
 		fd_lblChooseBumperType.left = new FormAttachment(lblChooseFile, 0,
@@ -177,11 +183,12 @@ public class DataLoaderDialog extends Dialog {
 		composite_1.setLayout(new FormLayout());
 
 		Label lblChooseFile_1 = new Label(composite_1, SWT.NONE);
+		lblChooseFile_1.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		FormData fd_lblChooseFile_1 = new FormData();
 		fd_lblChooseFile_1.top = new FormAttachment(0, 10);
 		fd_lblChooseFile_1.left = new FormAttachment(0, 10);
 		lblChooseFile_1.setLayoutData(fd_lblChooseFile_1);
-		lblChooseFile_1.setText("Choose File");
+		lblChooseFile_1.setText("Choose Monthly File");
 
 		bumBumperText = new Text(composite_1, SWT.BORDER);
 		FormData fd_bumBumperText = new FormData();
@@ -243,6 +250,7 @@ public class DataLoaderDialog extends Dialog {
 		composite_2.setLayout(new FormLayout());
 
 		Label lblChooseMonthlyFile = new Label(composite_2, SWT.NONE);
+		lblChooseMonthlyFile.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		FormData fd_lblChooseMonthlyFile = new FormData();
 		fd_lblChooseMonthlyFile.top = new FormAttachment(0, 10);
 		fd_lblChooseMonthlyFile.left = new FormAttachment(0, 10);
@@ -275,6 +283,7 @@ public class DataLoaderDialog extends Dialog {
 		btnBrowse_1.setText("Browse");
 
 		Label lblChooseBumperFile = new Label(composite_2, SWT.NONE);
+		lblChooseBumperFile.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		FormData fd_lblChooseBumperFile = new FormData();
 		fd_lblChooseBumperFile.top = new FormAttachment(bothMonthlyText, 6);
 		fd_lblChooseBumperFile.left = new FormAttachment(lblChooseMonthlyFile,
@@ -308,6 +317,7 @@ public class DataLoaderDialog extends Dialog {
 		btnBrowse_2.setText("Browse");
 
 		Label lblChooseBumperType_1 = new Label(composite_2, SWT.NONE);
+		lblChooseBumperType_1.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		FormData fd_lblChooseBumperType_1 = new FormData();
 		fd_lblChooseBumperType_1.top = new FormAttachment(bothBumperText, 6);
 		fd_lblChooseBumperType_1.left = new FormAttachment(
@@ -315,7 +325,7 @@ public class DataLoaderDialog extends Dialog {
 		lblChooseBumperType_1.setLayoutData(fd_lblChooseBumperType_1);
 		lblChooseBumperType_1.setText("Choose Bumper Type");
 
-		final Combo combo_1 = new Combo(composite_2, SWT.NONE);
+		final Combo combo_1 = new Combo(composite_2, SWT.READ_ONLY);
 		FormData fd_combo_1 = new FormData();
 		fd_combo_1.top = new FormAttachment(lblChooseBumperType_1, 3);
 		fd_combo_1.left = new FormAttachment(0, 10);

@@ -121,10 +121,7 @@ public class AddEditMonthlyTicket extends Dialog {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 
-				manualModelProvider.addEditCustomer(modelProvider.getSeries(),
-						modelProvider.getTicketNumber(),
-						modelProvider.getSelectedBumper(), isEdit,
-						selectionIndex);
+				
 				shlLotteryInformation.close();
 
 			}

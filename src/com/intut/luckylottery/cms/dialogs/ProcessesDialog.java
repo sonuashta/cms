@@ -69,9 +69,9 @@ public class ProcessesDialog extends Dialog {
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
-		shlProcesses = new Shell(getParent());
-
-		shlProcesses.setSize(800, 600);
+		shlProcesses = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+		
+		shlProcesses.setBounds(Util.setBouunds(800, 600));
 		shlProcesses.setText("Processes");
 		shlProcesses.setLayout(new FormLayout());
 

@@ -3,35 +3,38 @@ package com.intut.luckylottery.cms.modelProviders;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
 import com.intut.luckylottery.cms.customEvents.*;
-import com.intut.luckylottery.cms.util.Constants;
+import com.intut.luckylottery.cms.util.LotteryLogger;
 import com.intut.luckylottery.cms.util.Util;
 import com.intut.luckylottery.crudDatabase.Dbloader;
 import com.intut.luckylottery.domain.Customer;
-import com.intut.luckylottery.domain.Fields;
+import com.intut.luckylottery.domain.Message;
 
 public class ProcessesProgressDialogModelProvider {
 	private String labelMessage = "";
 	private String logMessage = "";
 	private Dbloader dbloader;
+	private String tableName;
+	private ProcessDialogModelProvider proceesDailogModelProvider;
 
 	public ProcessesProgressDialogModelProvider(List<Customer> customers,
-			boolean isMail, String text) {
+			boolean isMail, String text, String tableName,
+			ProcessDialogModelProvider proceesDailogModelProvider) {
 		setCustomers(customers);
 		dbloader = new Dbloader();
-		message = text;
+		this.message = text;
 		this.isMail = isMail;
+		this.tableName = tableName;
+		this.proceesDailogModelProvider = proceesDailogModelProvider;
 	}
 
-	private String message = "";
+	private String message;
 	private boolean isMail;
 	private List<Customer> customers;
 
@@ -55,9 +58,14 @@ public class ProcessesProgressDialogModelProvider {
 					setLabelMessage(getMessageText(customer));
 					setLogMessage(getLogMessage() + "\n "
 							+ getMessageText(customer));
-					
-					// dbloader.updateCustomer(customer, false, false,
-					// Constants.pendingMessage);
+					Message message1 = sendSms(message,
+							customer.getPhoneNumber());
+					boolean isMessageSend = false;
+					if (message1.getCode() == HttpURLConnection.HTTP_OK)
+						isMessageSend = true;
+					dbloader.insertMessageData(tableName, customer,
+							isMessageSend, message1.getMessage());
+					proceesDailogModelProvider.resetData();
 				}
 				setLogMessage(getLogMessage() + "\n" + "Completed");
 				setLabelMessage("Completed!");
@@ -73,7 +81,9 @@ public class ProcessesProgressDialogModelProvider {
 		workerThread.start();
 	}
 
-	public boolean sendSms(String messageText, String number) {
+	public Message sendSms(String messageText, String number) {
+		Message message1 = new Message();
+
 		String str;
 
 		if (Util.isStringNullOrEmpty(messageText))
@@ -84,9 +94,10 @@ public class ProcessesProgressDialogModelProvider {
 			// URL onlyMsgUrl = uri.toURL();
 
 			URL msgUrl = new URL(
-					"http://www.smszone.in/sendsms.asp?page=SendSmsBulk&username="
+					"http://dndopen.dove-sms.com/SMSAPI.jsp?username="
 							+ Util.getUserName() + "&password="
-							+ Util.getPassword() + "&number=91" + number
+							+ Util.getPassword() + "&sendername="
+							+ Util.getSenderName() + "&mobileno=91" + number
 							+ "&message=" + uri.toString().replace("http:", ""));
 
 			HttpURLConnection connection = (HttpURLConnection) msgUrl
@@ -98,7 +109,7 @@ public class ProcessesProgressDialogModelProvider {
 			System.out.println(res);
 			String returnstring = "";
 			int code = connection.getResponseCode();
-
+			message1.setCode(code);
 			if (code == HttpURLConnection.HTTP_OK) {
 				// Get response data.
 				BufferedReader in = new BufferedReader(new InputStreamReader(
@@ -108,15 +119,16 @@ public class ProcessesProgressDialogModelProvider {
 					returnstring = returnstring + str;
 				}
 			}
+			message1.setMessage(returnstring);
 			connection.disconnect();
-			if (returnstring.equals("SUCCESS"))
-				return true;
-		} catch (IOException e) {
-			return false;
-		} catch (URISyntaxException e) {
-			return false;
+
+		} catch (Exception e) {
+			LotteryLogger.getInstance().setError(
+					"Error in sending message," + e.getMessage());
+			message1.setCode(0);
+			message1.setMessage("Exception");
 		}
-		return false;
+		return message1;
 	}
 
 	private String getNumberText() {

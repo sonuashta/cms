@@ -1,39 +1,39 @@
 package com.intut.luckylottery.cms.modelProviders;
 
+import java.awt.Toolkit;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.eclipse.core.databinding.observable.list.WritableList;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
-
-import com.intut.luckylottery.cms.dialogs.AddEditMonthlyTicket;
 import com.intut.luckylottery.cms.util.Constants;
 import com.intut.luckylottery.cms.util.LotteryLogger;
 import com.intut.luckylottery.cms.util.Util;
 import com.intut.luckylottery.crudDatabase.Dbloader;
 import com.intut.luckylottery.domain.Customer;
 import com.intut.luckylottery.domain.Fields;
+import com.intut.luckylottery.domain.Message;
 import com.intut.luckylottery.domain.NewCustomer;
 
 public class ManualEntrydialogModelProvider {
 
 	public ManualEntrydialogModelProvider() {
 		newCustomer = new NewCustomer();
-		this.bumperWritableList = new WritableList();
-		this.monthlyWritableList = new WritableList();
 		dbLoader = new Dbloader();
 		this.startingSerialNumber = dbLoader.getSerialNumber();
 		setSerialNumber("" + startingSerialNumber);
 		customers = new ArrayList<Customer>();
-		monthlyList = new ArrayList<String>();
-		bumperList = new ArrayList<String>();
 		setDate(new Date());
 	}
 
@@ -44,23 +44,24 @@ public class ManualEntrydialogModelProvider {
 	private String emailId;
 	private String address;
 	private NewCustomer newCustomer;
-	private WritableList bumperWritableList;
-	private WritableList monthlyWritableList;
-	private List<String> bumperList;
+	private String monthlyTickets;
+	private String bumperTickets;
 
-	public List<String> getBumperList() {
-		return bumperList;
-	}
-
-	public List<String> getMonthlyList() {
-		return monthlyList;
-	}
-
-	private List<String> monthlyList;
 	private Dbloader dbLoader;
 	private int startingSerialNumber;
 	private List<Customer> customers;
 	private String selectedBumper;
+	private boolean sendSMSButton;
+	private boolean saveToDatabase;
+
+	public boolean isSaveToDatabase() {
+		return saveToDatabase;
+	}
+
+	public void setSaveToDatabase(boolean saveToDatabase) {
+		propertyChangeSupport.firePropertyChange("saveToDatabase",
+				this.saveToDatabase, this.saveToDatabase = saveToDatabase);
+	}
 
 	public String getSelectedBumper() {
 		return selectedBumper;
@@ -107,8 +108,7 @@ public class ManualEntrydialogModelProvider {
 	}
 
 	public void setPhoneNumber(String phoneNumber) {
-		propertyChangeSupport.firePropertyChange("phoneNumber",
-				this.phoneNumber, this.phoneNumber = phoneNumber);
+		this.phoneNumber = phoneNumber;
 	}
 
 	public String getEmailId() {
@@ -145,112 +145,74 @@ public class ManualEntrydialogModelProvider {
 		propertyChangeSupport.removePropertyChangeListener(listener);
 	}
 
-	public void addEditCustomer(String series, String ticketNumber,
-			String bumperName, boolean isEdit, int selectionIndex) {
-
-		if (Util.isStringNullOrEmpty(bumperName)) {
-			if (isEdit) {
-				monthlyList.remove(selectionIndex);
-				monthlyList.add(selectionIndex, series + ";" + ticketNumber);
-			} else
-				monthlyList.add(series + ";" + ticketNumber);
-		} else {
-
-			if (isEdit) {
-				bumperList.remove(selectionIndex);
-				bumperList.add(selectionIndex, series + ";" + ticketNumber
-						+ ";" + bumperName);
-			} else
-				bumperList.add(series + ";" + ticketNumber + ";" + bumperName);
-		}
-		setBumperWritableList(bumperList);
-		setMonthlyWritableList(monthlyList);
-	}
-
-	public void openAddEditDialog(boolean isBumper, String series,
-			String ticketNumber, String bumperName, boolean isEdit,
-			int selectionIndex) {
-
-		AddEditMonthlyTicket dialog = new AddEditMonthlyTicket(Display
-				.getCurrent().getActiveShell(), this, isBumper, series,
-				ticketNumber, bumperName, isEdit, selectionIndex);
-		dialog.open();
-
-	}
-
 	public void saveCustomer() {
-		int serialNumber = startingSerialNumber;
-		List<Customer> customers = new ArrayList<Customer>();
-		for (String string : bumperList) {
-			String seriesTicketNumberAndBumperName[] = string.split(";");
-			Customer customer = new Customer();
-			customer.setName(getName());
-			customer.setAddress(getAddress());
-			customer.setDate(getDate());
-			customer.setEmailId(getEmailId());
-			customer.setPhoneNumber(getPhoneNumber());
-			customer.setSerialNumber(serialNumber++);
-			customer.setSeries(seriesTicketNumberAndBumperName[0]);
-			customer.setTicketNumber(seriesTicketNumberAndBumperName[1]);
-			customer.setBumperName(seriesTicketNumberAndBumperName[2]);
-			customer.setLotteryType(Fields.typeBumper);
-			customers.add(customer);
-		}
 
-		for (String string : monthlyList) {
-			String seriesTicketNumber[] = string.split(";");
-			Customer customer = new Customer();
-			customer.setAddress(getAddress());
-			customer.setDate(getDate());
-			customer.setName(getName());
-			customer.setEmailId(getEmailId());
-			customer.setPhoneNumber(getPhoneNumber());
-			customer.setSerialNumber(serialNumber++);
-			customer.setSeries(seriesTicketNumber[0]);
-			customer.setTicketNumber(seriesTicketNumber[1]);
-			customer.setLotteryType(Fields.typeMonthly);
-			customers.add(customer);
-		}
+		ProgressMonitorDialog dialog = new ProgressMonitorDialog(Display
+				.getCurrent().getActiveShell());
 
-		dbLoader.savePendings(customers, false, false, Constants.pendingMessage);
+		try {
+			dialog.run(true, true, new IRunnableWithProgress() {
+				public void run(IProgressMonitor monitor) {
+					monitor.beginTask("Saving Data in database....", 2);
+					// begin task
+					monitor.worked(1);
+
+					dbLoader.savePendings(getCustomers(), false, false,
+							Constants.pendingMessage);
+					monitor.setTaskName("Done");
+
+					monitor.done();
+					resetData();
+				}
+			});
+		} catch (InvocationTargetException e) {
+			LotteryLogger.getInstance().setError(
+					"Progress Dialog Error:" + e.getMessage());
+
+		} catch (InterruptedException e) {
+			LotteryLogger.getInstance().setError(
+					"Progress Dialog Error:" + e.getMessage());
+		}
 	}
 
 	private List<Customer> getCustomers() {
 		int serialNumber = startingSerialNumber;
 
 		List<Customer> customers = new ArrayList<Customer>();
-		for (String string : bumperList) {
-			String seriesTicketNumberAndBumperName[] = string.split(";");
-			Customer customer = new Customer();
-			customer.setName(getName());
-			customer.setAddress(getAddress());
-			customer.setDate(getDate());
-			customer.setEmailId(getEmailId());
-			customer.setPhoneNumber(getPhoneNumber());
-			customer.setSerialNumber(serialNumber++);
-			customer.setSeries(seriesTicketNumberAndBumperName[0]);
-			customer.setTicketNumber(seriesTicketNumberAndBumperName[1]);
-			customer.setBumperName(seriesTicketNumberAndBumperName[2]);
-			customer.setLotteryType(Fields.typeBumper);
-			customers.add(customer);
-		}
+		if (!Util.isStringNullOrEmpty(bumperTickets)) {
+			String bumperList[] = bumperTickets.split(",");
+			for (String string : bumperList) {
 
-		for (String string : monthlyList) {
-			String seriesTicketNumber[] = string.split(";");
-			Customer customer = new Customer();
-			customer.setAddress(getAddress());
-			customer.setDate(getDate());
-			customer.setName(getName());
-			customer.setEmailId(getEmailId());
-			customer.setPhoneNumber(getPhoneNumber());
-			customer.setSerialNumber(serialNumber++);
-			customer.setSeries(seriesTicketNumber[0]);
-			customer.setTicketNumber(seriesTicketNumber[1]);
-			customer.setLotteryType(Fields.typeMonthly);
-			customers.add(customer);
+				Customer customer = new Customer();
+				customer.setName(getName());
+				customer.setAddress(getAddress());
+				customer.setDate(getDate());
+				customer.setEmailId(getEmailId());
+				customer.setPhoneNumber(getPhoneNumber());
+				customer.setSerialNumber(serialNumber++);
+
+				customer.setTicketNumber(string);
+				customer.setBumperName(selectedBumper);
+				customer.setLotteryType(Fields.typeBumper);
+				customers.add(customer);
+			}
+		}
+		if (!Util.isStringNullOrEmpty(monthlyTickets)) {
+			String monthlyList[] = monthlyTickets.split(",");
+			for (String string : monthlyList) {
+				Customer customer = new Customer();
+				customer.setAddress(getAddress());
+				customer.setDate(getDate());
+				customer.setName(getName());
+				customer.setEmailId(getEmailId());
+				customer.setPhoneNumber(getPhoneNumber());
+				customer.setSerialNumber(serialNumber++);
+				customer.setTicketNumber(string);
+				customer.setLotteryType(Fields.typeMonthly);
+				customers.add(customer);
+			}
 		}
 		return customers;
-
 	}
 
 	public void sendAndDisplayMessage() {
@@ -260,8 +222,8 @@ public class ManualEntrydialogModelProvider {
 		try {
 			dialog.run(true, true, new IRunnableWithProgress() {
 				public void run(IProgressMonitor monitor) {
-					monitor.beginTask("Initializing Sending Process", 3); // begin
-																			// task
+					monitor.beginTask("Initializing Sending Process", 3);
+					// begin task
 					monitor.worked(1);
 
 					try {
@@ -274,8 +236,10 @@ public class ManualEntrydialogModelProvider {
 
 					monitor.setTaskName("Sending Message where message is "
 							+ filterMessageText());
-					boolean isMessageSend = sendSms();
-
+					Message message = sendSms();
+					boolean isMessageSend = false;
+					if (message.getCode() == HttpURLConnection.HTTP_OK)
+						isMessageSend = true;
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
@@ -288,11 +252,12 @@ public class ManualEntrydialogModelProvider {
 					// TODO add mail send functionality
 					boolean isMailSend = true;
 					dbLoader.savePendings(getCustomers(), isMessageSend,
-							isMailSend, "send");
+							isMailSend, message.getMessage() + ",and code is "
+									+ message.getCode());
 					monitor.setTaskName("Done");
 
 					monitor.done();
-
+					resetData();
 				}
 			});
 		} catch (InvocationTargetException e) {
@@ -306,96 +271,167 @@ public class ManualEntrydialogModelProvider {
 
 	}
 
+	private int getTicketCount() {
+		int count = 0;
+		if (!Util.isStringNullOrEmpty(bumperTickets))
+			count += bumperTickets.split(",").length;
+		if (!Util.isStringNullOrEmpty(monthlyTickets))
+			count += bumperTickets.split(",").length;
+		return count;
+	}
+
+	private int getBumperTicketCount() {
+		int count = 0;
+		if (!Util.isStringNullOrEmpty(monthlyTickets))
+			count += monthlyTickets.split(",").length;
+		return count;
+	}
+
+	private int getMonthlyTicketCount() {
+		int count = 0;
+		if (!Util.isStringNullOrEmpty(bumperTickets))
+			count += bumperTickets.split(",").length;
+		return count;
+	}
+
 	private String filterMessageText() {
 		String messageText = "Thanks for buying ticket(s) with Lucky Lottery.";
-
-		if (bumperList.size() + monthlyList.size() >= 5)
+		int monthlyCount = getMonthlyTicketCount();
+		int bumperCount = getBumperTicketCount();
+		if ((monthlyCount + bumperCount) >= 5)
 			messageText += "Total No. of tickets bought is: "
-					+ (bumperList.size() + monthlyList.size());
+					+ (monthlyCount + bumperCount) + ", where bumper count is "
+					+ bumperCount + " and monthly count is " + monthlyCount;
 		else {
-			int count = 0;
-			String ids = "";
-			for (String s : bumperList) {
-				if (count >= 5)
-					break;
-				ids += s.split(";")[1] + ",";
-				count++;
-			}
-			if (count < 5)
-				for (String s : monthlyList) {
-					if (count >= 5)
-						break;
-					ids += s.split(";")[1] + ",";
-					count++;
+
+			String message = "Your bumper tickets are ";
+			if (!Util.isStringNullOrEmpty(bumperTickets)) {
+				for (String s : bumperTickets.split(",")) {
+					message += s + ",";
+
 				}
-			messageText += "Your ticket no.s are " + ids;
+				message = message.replaceAll(",$", "") + " and ";
+			} else {
+				message = "";
+			}
+
+			message += "Your monthly tickets are ";
+			if (!Util.isStringNullOrEmpty(monthlyTickets)) {
+				for (String s : monthlyTickets.split(",")) {
+					message += s + ",";
+				}
+			}
+			messageText += message.replaceAll(",$", "");
 		}
 		return messageText;
 	}
 
-	public boolean sendSms() {
-		return true;
-		// String str;
-		// String messageText = "";
-		// if (Util.isStringNullOrEmpty(messageText))
-		// messageText = "empty";
-		// try {
-		// URI uri = new URI("http", messageText, "");
-		//
-		// // URL onlyMsgUrl = uri.toURL();
-		//
-		// URL msgUrl = new URL(
-		// "http://www.smszone.in/sendsms.asp?page=SendSmsBulk&username="
-		// + Util.getUserName() + "&password="
-		// + Util.getPassword() + "&number=91"
-		// + getNumberText() + "&message="
-		// + uri.toString().replace("http:", ""));
-		//
-		// HttpURLConnection connection = (HttpURLConnection) msgUrl
-		// .openConnection();
-		// connection.setDoOutput(false);
-		// connection.setDoInput(true);
-		//
-		// String res = connection.getResponseMessage();
-		// System.out.println(res);
-		// String returnstring = "";
-		// int code = connection.getResponseCode();
-		//
-		// if (code == HttpURLConnection.HTTP_OK) {
-		// // Get response data.
-		// BufferedReader in = new BufferedReader(new InputStreamReader(
-		// connection.getInputStream()));
-		//
-		// while (null != ((str = in.readLine()))) {
-		// returnstring = returnstring + str;
-		// }
-		// }
-		// connection.disconnect();
-		// if (returnstring.equals("SUCCESS"))
-		// return true;
-		// } catch (IOException e) {
-		// return false;
-		// } catch (URISyntaxException e) {
-		// return false;
-		// }
-		// return false;
+	public Message sendSms() {
+		Message message = new Message();
+		
+		String str;
+
+		String messageText = filterMessageText();
+		if (Util.isStringNullOrEmpty(messageText))
+			messageText = "empty";
+		try {
+			URI uri = new URI("http", messageText, "");
+
+			// URL onlyMsgUrl = uri.toURL();
+
+			URL msgUrl = new URL(
+					"http://dndopen.dove-sms.com/SMSAPI.jsp?username="
+							+ Util.getUserName() + "&password="
+							+ Util.getPassword() + "&sendername="
+							+ Util.getSenderName() + "&mobileno=91"
+							+ getPhoneNumber() + "&message="
+							+ uri.toString().replace("http:", ""));
+
+			HttpURLConnection connection = (HttpURLConnection) msgUrl
+					.openConnection();
+			connection.setDoOutput(false);
+			connection.setDoInput(true);
+
+			String res = connection.getResponseMessage();
+			System.out.println(res);
+			String returnstring = "";
+			int code = connection.getResponseCode();
+			message.setCode(code);
+			if (code == HttpURLConnection.HTTP_OK) {
+				// Get response data.
+				BufferedReader in = new BufferedReader(new InputStreamReader(
+						connection.getInputStream()));
+
+				while (null != ((str = in.readLine()))) {
+					returnstring = returnstring + str;
+				}
+			}
+			message.setMessage(returnstring);
+			connection.disconnect();
+
+		} catch (Exception e) {
+			LotteryLogger.getInstance().setError(
+					"Error in sending message," + e.getMessage());
+			message.setCode(0);
+			message.setMessage("Exception");
+		}
+		return message;
 	}
 
-	public WritableList getBumperWritableList() {
-		return bumperWritableList;
+	public String getMonthlyTickets() {
+		return monthlyTickets;
 	}
 
-	public void setBumperWritableList(List<String> bumperList) {
-		bumperWritableList.clear();
-		bumperWritableList.addAll(bumperList);
+	public void setMonthlyTickets(String monthlyTickets) {
+		if (Util.isStringNullOrEmpty(monthlyTickets)
+				&& Util.isStringNullOrEmpty(bumperTickets)) {
+			setSaveToDatabase(false);
+			setSendSMSButton(false);
+		} else {
+			setSaveToDatabase(true);
+			setSendSMSButton(true);
+
+		}
+		propertyChangeSupport.firePropertyChange("monthlyTickets",
+				this.monthlyTickets, this.monthlyTickets = monthlyTickets);
 	}
 
-	public WritableList getMonthlyWritableList() {
-		return monthlyWritableList;
+	public String getBumperTickets() {
+		return bumperTickets;
 	}
 
-	public void setMonthlyWritableList(List<String> monthlyList) {
-		this.monthlyWritableList.clear();
-		this.monthlyWritableList.addAll(monthlyList);
+	public void setBumperTickets(String bumperTickets) {
+		if (Util.isStringNullOrEmpty(monthlyTickets)
+				&& Util.isStringNullOrEmpty(bumperTickets)) {
+			setSaveToDatabase(false);
+			setSendSMSButton(false);
+		} else {
+			setSaveToDatabase(true);
+			setSendSMSButton(true);
+
+		}
+		propertyChangeSupport.firePropertyChange("bumperTickets",
+				this.bumperTickets, this.bumperTickets = bumperTickets);
 	}
+
+	public boolean isSendSMSButton() {
+		return sendSMSButton;
+	}
+
+	public void setSendSMSButton(boolean sendSMSButton) {
+		propertyChangeSupport.firePropertyChange("sendSMSButton",
+				this.sendSMSButton, this.sendSMSButton = sendSMSButton);
+	}
+
+	public void resetData() {
+		setDate(new Date());
+		setBumperTickets("");
+		setEmailId("");
+		setAddress("");
+		setMonthlyTickets("");
+		setName("");
+		setPhoneNumber("");
+		setSerialNumber("" + dbLoader.getSerialNumber());
+	}
+
 }
