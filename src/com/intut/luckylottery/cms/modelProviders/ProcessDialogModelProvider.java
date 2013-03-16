@@ -11,7 +11,7 @@ import com.intut.luckylottery.crudDatabase.Dbloader;
 import com.intut.luckylottery.domain.Customer;
 
 public class ProcessDialogModelProvider {
-	public ProcessDialogModelProvider(String processName) {
+	public ProcessDialogModelProvider(String processName) throws Exception {
 		setName(processName);
 		dbLoader = new Dbloader();
 		setTotal("" + dbLoader.getUniqueCustomersMessagesCount());
@@ -86,28 +86,28 @@ public class ProcessDialogModelProvider {
 				this.totalEmails, this.totalEmails = totalEmails);
 	}
 
-	public void processMessages() {
+	public void processMessages() throws Exception {
 		List<Customer> customers = dbLoader
 				.getUniqueMessagesFromTable(getName());
 		ProcessesProgressDialog dialog = new ProcessesProgressDialog(Display
 				.getCurrent().getActiveShell(), customers, false, getMessage(),
-				name,this);
+				name, this);
 		dialog.open();
 	}
 
-	public void processMails() {
+	public void processMails() throws Exception {
 		List<Customer> customers = dbLoader.getUniqueMailsFromTable(getName());
 		ProcessesProgressDialog dialog = new ProcessesProgressDialog(Display
-				.getCurrent().getActiveShell(), customers, true, "", name,this);
+				.getCurrent().getActiveShell(), customers, true, "", name, this);
 		dialog.open();
-		
+
 	}
 
 	public String getMessage() {
 		return message;
 	}
 
-	public void resetData() {
+	public void resetData() throws Exception {
 		setTotal("" + dbLoader.getUniqueCustomersMessagesCount());
 		setLeftProcesses("" + dbLoader.getUniqueMessagesCountFromTable(name));
 		setLeftMails("" + dbLoader.getUniqueMailsCountFromTable(name));

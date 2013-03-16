@@ -1,51 +1,87 @@
 package com.intut.luckylottery.tests;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
+import junit.framework.TestCase;
+
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.intut.luckylottery.crudDatabase.Dbloader;
 import com.intut.luckylottery.domain.Customer;
 
-public class DatabaseTest {
+public class DatabaseTest extends TestCase {
 
-	@Test
-	public void test() {
-		System.out.println("Im in test");
-		 Dbloader loader = new Dbloader();
-		 loader.dropTables();
-		 ReadExcel test = new ReadExcel();
-		 try {
-		 List<Customer> customers = test.read(new File(
-		 "C:\\Users\\KESHAV\\Desktop\\cms\\test.xlsx"), "Monthly",
-		 "");
-		 File file = new File("");
-		 System.out.println(file.getAbsolutePath());
-		
-		 loader.insertbackupLotteries(customers);
-		 } catch (IOException e) {
-		 // TODO Auto-generated catch block
-		 e.printStackTrace();
-		 }
+	private static Dbloader loader;
 
+	@BeforeClass
+	public void testSetup() {
+		loader = new Dbloader();
 	}
 
-	@Test
-	public void test1() {
-//		System.out.println("Im in test1");
-//		Dbloader loader = new Dbloader();
-//		loader.dropTables();
+//	@s
+//	public static void testCleanup() {
 //
-//		loader.init();
-//		String processName = "Holi";
-//		loader.insertProcess(processName);
-//		loader.createMessageTable(processName);
+//		try {
+//			loader.dropDatabase();
+//		} catch (Exception e) {
+//			Assert.fail("Failed to delete database");
+//		}
+//
+//	}
+
+	@Override
+	protected void setUp() throws Exception {
+		// TODO Auto-generated method stub
+		super.setUp();
+	}
+
+	@Test
+	public void testInsertBackupEntries() {
+		
+		
+		ReadExcel test = new ReadExcel();
+		try {
+			List<Customer> customers = test.read(new File(
+					"C:\\Users\\KESHAV\\Desktop\\cms\\test.xlsx"), "Monthly",
+					"");
+			try {
+				loader.insertbackupLotteries(customers);
+				int count = loader.getCustomersCount();
+				Assert.assertTrue(count == customers.size());
+
+			} catch (Exception e) {
+				Assert.fail(e.getMessage());
+			}
+		} catch (IOException e) {
+			Assert.fail(e.getMessage());
+		}
 
 	}
+
+	@Override
+	protected void tearDown() throws Exception {
+		// TODO Auto-generated method stub
+		super.tearDown();
+		loader.dropDatabase();
+	}
+
+//	@Test
+//	public void testCreateTable() {
+//		// System.out.println("Im in test1");
+//		// Dbloader loader = new Dbloader();
+//		// loader.dropTables();
+//		//
+//		// loader.init();
+//		// String processName = "Holi";
+//		// loader.insertProcess(processName);
+//		// loader.createMessageTable(processName);
+//
+//	}
 
 }

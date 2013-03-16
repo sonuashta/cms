@@ -69,8 +69,9 @@ public class ProcessesDialog extends Dialog {
 	 * Create contents of the dialog.
 	 */
 	private void createContents() {
-		shlProcesses = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
-		
+		shlProcesses = new Shell(getParent(), SWT.DIALOG_TRIM
+				| SWT.APPLICATION_MODAL);
+
 		shlProcesses.setBounds(Util.setBouunds(800, 600));
 		shlProcesses.setText("Processes");
 		shlProcesses.setLayout(new FormLayout());
@@ -198,9 +199,15 @@ public class ProcessesDialog extends Dialog {
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				ProcessDailog dialog = new ProcessDailog(shlProcesses,
-						processName);
-				dialog.open();
+				ProcessDailog dialog;
+				try {
+					dialog = new ProcessDailog(shlProcesses, processName);
+					dialog.open();
+				} catch (Exception e1) {
+					MessageDialog.openError(shlProcesses,
+							"Error in opening process dialog", e1.getMessage());
+				}
+
 			}
 		});
 		FormData fd_btnNewButton = new FormData();

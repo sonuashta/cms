@@ -63,10 +63,16 @@ public class ProcessesProgressDialogModelProvider {
 					boolean isMessageSend = false;
 					if (message1.getCode() == HttpURLConnection.HTTP_OK)
 						isMessageSend = true;
-					dbloader.insertMessageData(tableName, customer,
-							isMessageSend, message1.getMessage());
-					proceesDailogModelProvider.resetData();
+					try {
+						dbloader.insertMessageData(tableName, customer,
+								isMessageSend, message1.getMessage());
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 				}
+				
 				setLogMessage(getLogMessage() + "\n" + "Completed");
 				setLabelMessage("Completed!");
 			}

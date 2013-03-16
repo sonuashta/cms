@@ -56,8 +56,12 @@ public class ProgressDialogModelProvider {
 							+ "\n Entering record of customer where s.no. is and name is "
 							+ customer.getSerialNumber() + " and "
 							+ customer.getName());
-					dbloader.updateCustomer(customer, false, false,
-							Constants.pendingMessage);
+					try {
+						dbloader.updateCustomer(customer, false, false,
+								Constants.pendingMessage);
+					} catch (Exception e) {
+						
+					}
 				}
 				setLogMessage(getLogMessage() + "\n" + "Completed");
 				setLabelMessage("Completed!");

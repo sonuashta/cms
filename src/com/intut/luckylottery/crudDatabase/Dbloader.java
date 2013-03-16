@@ -1,5 +1,6 @@
 package com.intut.luckylottery.crudDatabase;
 
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,40 +13,82 @@ import com.intut.luckylottery.domain.Customer;
 import com.intut.luckylottery.domain.Fields;
 
 public class Dbloader {
+	public Dbloader() {
+		init();
+	}
 
-	private Connection getConnection() {
+	private Connection getConnection() throws Exception {
 		Connection connection;
 		try {
 			Class.forName("org.sqlite.JDBC");
 			connection = DriverManager.getConnection("jdbc:sqlite:lottery.db");
 			return connection;
 		} catch (Exception e) {
-			LotteryLogger.getInstance().setError("Error");
-			return null;
+			LotteryLogger.getInstance().setError(
+					"Error in creating connection" + e.getMessage());
+			throw new Exception("connection error , due to " + e.getMessage());
+
 		}
 	}
 
-	public void dropTables() {
+	public void dropTables(String tableName) throws Exception {
+
+		Connection conn = null;
+		Statement stat = null;
 		try {
 
-			Connection conn = getConnection();
+			conn = getConnection();
 
-			Statement stat = conn.createStatement();
+			stat = conn.createStatement();
+			stat.executeUpdate("drop table if exists " + tableName + ";");
+			conn.close();
+
+		} catch (Exception e) {
+			LotteryLogger.getInstance().setError(
+					"Error in droping tables " + e.getMessage());
+			throw new Exception("error in droping tables");
+
+		} finally {
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
+		}
+	}
+
+	public void dropTables() throws Exception {
+
+		Connection conn = null;
+		Statement stat = null;
+		try {
+
+			conn = getConnection();
+
+			stat = conn.createStatement();
 			stat.executeUpdate("drop table if exists customer;");
 			stat.executeUpdate("drop table if exists processes;");
 			conn.close();
 
 		} catch (Exception e) {
-			LotteryLogger.getInstance().setError("");
+			LotteryLogger.getInstance().setError(
+					"Error in droping tables " + e.getMessage());
+			throw new Exception("error in droping tables");
 
+		} finally {
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
 		}
 	}
 
-	public int getSerialNumber() {
+	public int getSerialNumber() throws Exception {
 		int serialNumber = 0;
+		Connection conn = null;
+		Statement stat = null;
 		try {
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
+			conn = getConnection();
+			stat = conn.createStatement();
 
 			ResultSet rs = stat
 					.executeQuery("select max(serialNumber) as serialNumber from customer");
@@ -56,12 +99,18 @@ public class Dbloader {
 
 			rs.close();
 			conn.close();
-
+			return ++serialNumber;
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
-					"Error in getting serial Number");
+					"Error in getting serial Number" + e.getMessage());
+			throw new Exception("Error in getting serial Number");
+		} finally {
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
 		}
-		return ++serialNumber;
+
 	}
 
 	public boolean init() {
@@ -103,12 +152,14 @@ public class Dbloader {
 		return true;
 	}
 
-	public void createMessageTable(String table) {
+	public void createMessageTable(String table) throws Exception {
+
+		Connection conn = null;
+		Statement stat = null;
 		try {
-
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
-
+			conn = getConnection();
+			stat = conn.createStatement();
+			conn.setAutoCommit(false);
 			stat.executeUpdate("create table if not exists "
 					+ table.toLowerCase()
 					+ "Messages ( id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -122,72 +173,82 @@ public class Dbloader {
 					+ "createdDate date," + "updatedDate date,"
 					+ "deletedDate date);");
 			insertDummyData(conn, table);
-			stat.close();
-			conn.close();
-
+			conn.commit();
 		} catch (Exception e) {
+
 			LotteryLogger.getInstance().setError(
-					"Error in creating message tables," + e.getMessage());
+					"Error in creating message tables, " + e.getMessage());
+			if (conn != null)
+				conn.rollback();
+			throw new Exception("Exception in creating message table");
+
+		} finally {
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
+
 		}
 
 	}
 
-	public void insertCustomers(List<Customer> customers) {
+	public void insertCustomers(List<Customer> customers) throws Exception {
+		Connection conn = null;
+		PreparedStatement prep = null;
 		try {
 			init();
-			Connection conn = getConnection();
-
+			conn = getConnection();
+			conn.setAutoCommit(false);
 			for (Customer customer : customers) {
-				try {
-					PreparedStatement prep = conn
-							.prepareStatement("insert into customer values ( null,"
-									+ "?,"
-									+ "?,"
-									+ "?,"
-									+ " ?,"
-									+ "?,"
-									+ " ?,"
-									+ "?,"
-									+ "? ,"
-									+ "? ,"
-									+ "?,"
-									+ "?,"
-									+ "?,"
-									+ "? , ?, ?);");
 
-					prep.setInt(1, customer.getSerialNumber());
-					prep.setString(2, customer.getSeries());
-					prep.setString(3, customer.getTicketNumber());
-					prep.setString(4, customer.getName());
-					prep.setString(5, customer.getLotteryType());
-					prep.setString(6, customer.getBumperName());
-					prep.setString(7, customer.getPhoneNumber());
-					prep.setString(8, customer.getEmailId());
-					prep.setString(9, customer.getAddress());
-					prep.setBoolean(10, false);
-					prep.setBoolean(11, false);
-					prep.setString(12, Constants.backupMessage);
-					prep.setString(13, Util.formatDate(customer.getDate()));
-					prep.setString(14, Util.formatDate(new Date()));
-					prep.setString(15, Util.formatDate(new Date()));
-					prep.addBatch();
-					conn.setAutoCommit(false);
-					prep.executeBatch();
-					conn.setAutoCommit(true);
-					prep.close();
-				} catch (Exception e) {
-					LotteryLogger.getInstance().setError(
-							"Error in inserting customer," + e.getMessage());
-				}
+				prep = conn
+						.prepareStatement("insert into customer values ( null,"
+								+ "?," + "?," + "?," + " ?," + "?," + " ?,"
+								+ "?," + "? ," + "? ," + "?," + "?," + "?,"
+								+ "? , ?, ?);");
+
+				prep.setInt(1, customer.getSerialNumber());
+				prep.setString(2, customer.getSeries());
+				prep.setString(3, customer.getTicketNumber());
+				prep.setString(4, customer.getName());
+				prep.setString(5, customer.getLotteryType());
+				prep.setString(6, customer.getBumperName());
+				prep.setString(7, customer.getPhoneNumber());
+				prep.setString(8, customer.getEmailId());
+				prep.setString(9, customer.getAddress());
+				prep.setBoolean(10, false);
+				prep.setBoolean(11, false);
+				prep.setString(12, Constants.backupMessage);
+				prep.setString(13, Util.formatDate(customer.getDate()));
+				prep.setString(14, Util.formatDate(new Date()));
+				prep.setString(15, Util.formatDate(new Date()));
+				prep.addBatch();
+
+				prep.executeBatch();
+
+				prep.close();
+
 			}
-			conn.close();
+			conn.commit();
+
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Error in inserting customers," + e.getMessage());
+			if (conn != null)
+				conn.rollback();
+			throw new Exception("Error in inserting customer," + e.getMessage());
+
+		} finally {
+			if (prep != null)
+				prep.close();
+			if (conn != null)
+				conn.close();
+
 		}
 	}
 
-	private void insertDummyData(Connection conn, String tableName) {
+	private void insertDummyData(Connection conn, String tableName)
+			throws Exception {
 		try {
 			Statement stat = conn.createStatement();
 
@@ -201,18 +262,25 @@ public class Dbloader {
 			stat.close();
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
-					"Error in dummy Data," + e.getMessage());
+					"Error in dummy Data, where table name is"
+							+ ((Util.isStringNullOrEmpty(tableName) ? ""
+									: tableName)) + e.getMessage());
+			throw new Exception(
+					"Error in inserting dummy data, where table name is"
+							+ ((Util.isStringNullOrEmpty(tableName) ? ""
+									: tableName)) + e.getMessage());
 		}
 	}
 
 	public void insertMessageData(String tableName, Customer customer,
-			boolean isSend, String status) {
+			boolean isSend, String status) throws Exception {
+		Connection conn = null;
+		PreparedStatement prep = null;
 		try {
-			Connection conn = getConnection();
-
-			PreparedStatement prep = conn
-					.prepareStatement("insert or ignore into " + tableName
-							+ "Messages values(null,?,?,?,?,?,?,?);");
+			conn = getConnection();
+			conn.setAutoCommit(false);
+			prep = conn.prepareStatement("insert or ignore into " + tableName
+					+ "Messages values(null,?,?,?,?,?,?,?);");
 
 			prep.setString(1, customer.getName());
 
@@ -222,27 +290,41 @@ public class Dbloader {
 			prep.setString(5, Util.formatDate(new Date()));
 			prep.setString(6, Util.formatDate(new Date()));
 			prep.addBatch();
-			conn.setAutoCommit(false);
+
 			prep.executeBatch();
-			conn.setAutoCommit(true);
-			prep.close();
-			conn.close();
+			conn.commit();
 
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
-					"error in saving to database process customer, "
-							+ e.getMessage());
+					"error in saving to database process customer, where table name is"
+							+ ((Util.isStringNullOrEmpty(tableName) ? ""
+									: tableName)) + e.getMessage());
+			if (conn != null)
+				conn.rollback();
+			throw new Exception(
+					"error in saving to database process customer, where table name is"
+							+ ((Util.isStringNullOrEmpty(tableName) ? ""
+									: tableName)) + e.getMessage());
+		} finally {
+			if (prep != null)
+				prep.close();
+			if (conn != null)
+				conn.close();
+
 		}
 	}
 
-	public List<Customer> getUniqueMessagesFromTable(String tableName) {
+	public List<Customer> getUniqueMessagesFromTable(String tableName)
+			throws Exception {
 		List<Customer> customers = new ArrayList<Customer>();
-
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
 		try {
 			createMessageTable(tableName);
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
-			ResultSet rs = stat
+			conn = getConnection();
+			stat = conn.createStatement();
+			rs = stat
 					.executeQuery("select name , phoneNumber  from customer where phoneNumber not in "
 							+ "(select phoneNumber from "
 							+ tableName
@@ -261,26 +343,36 @@ public class Dbloader {
 				customers.add(customer);
 			}
 
-			rs.close();
-
-			conn.setAutoCommit(true);
-			conn.close();
 			return customers;
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
-					"Error in getting unique numbers ");
-			return customers;
+					"Error in getting unique numbers " + e.getMessage());
+			throw new Exception("Error in getting unique numbers "
+					+ e.getMessage());
+		} finally {
+			if (rs != null)
+				rs.close();
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
 		}
 	}
 
-	public int getUniqueMessagesCountFromTable(String tableName) {
+	public int getUniqueMessagesCountFromTable(String tableName)
+			throws Exception {
 
 		int count = 0;
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
 		try {
+
 			createMessageTable(tableName);
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
-			ResultSet rs = stat
+			conn = getConnection();
+
+			stat = conn.createStatement();
+			rs = stat
 					.executeQuery("select count(DISTINCT phoneNumber) as count from customer where phoneNumber not in "
 							+ "(select phoneNumber from "
 							+ tableName
@@ -294,27 +386,37 @@ public class Dbloader {
 
 			}
 
-			rs.close();
-			stat.close();
-			conn.setAutoCommit(true);
-			conn.close();
 			return count;
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
-					"Error in getting messages count from table" + tableName
-							+ ", " + e.getMessage());
-			return -1;
+					"Error in getting messages count from table"
+							+ (Util.isStringNullOrEmpty(tableName) ? ""
+									: tableName) + ", " + e.getMessage());
+			throw new Exception("Error in getting messages count from table"
+					+ (Util.isStringNullOrEmpty(tableName) ? "" : tableName)
+					+ ", " + e.getMessage());
+
+		} finally {
+			if (rs != null)
+				rs.close();
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
 		}
 	}
 
-	public int getUniqueMailsCountFromTable(String tableName) {
+	public int getUniqueMailsCountFromTable(String tableName) throws Exception {
 
 		int count = 0;
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
 		try {
 			createMessageTable(tableName);
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
-			ResultSet rs = stat
+			conn = getConnection();
+			stat = conn.createStatement();
+			rs = stat
 					.executeQuery("select count(DISTINCT emailId) as count from customer where emailId not in "
 							+ "(select emailId from "
 							+ tableName
@@ -325,27 +427,37 @@ public class Dbloader {
 
 			}
 
-			rs.close();
-			stat.close();
-			conn.setAutoCommit(true);
-			conn.close();
 			return count;
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
-					"Error in getting messages count from table" + tableName
-							+ ", " + e.getMessage());
-			return -1;
+					"Error in getting mails count from table"
+							+ (Util.isStringNullOrEmpty(tableName) ? ""
+									: tableName) + ", " + e.getMessage());
+			throw new Exception("Error in getting mails count from table"
+					+ (Util.isStringNullOrEmpty(tableName) ? "" : tableName)
+					+ ", " + e.getMessage());
+
+		} finally {
+			if (rs != null)
+				rs.close();
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
 		}
 	}
 
-	public int getUniqueCustomersMessagesCount() {
+	public int getUniqueCustomersMessagesCount() throws Exception {
 
 		int count = 0;
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
 		try {
 
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
-			ResultSet rs = stat
+			conn = getConnection();
+			stat = conn.createStatement();
+			rs = stat
 					.executeQuery("select count(DISTINCT phoneNumber) as count from customer where phoneNumber!=''");
 
 			while (rs.next()) {
@@ -353,26 +465,36 @@ public class Dbloader {
 
 			}
 
-			rs.close();
-			stat.close();
-			conn.setAutoCommit(true);
-			conn.close();
 			return count;
 		} catch (Exception e) {
+
 			LotteryLogger.getInstance().setError(
-					"Error in getting message count ," + e.getMessage());
-			return -1;
+					"Error in getting message customer count ,"
+							+ e.getMessage());
+			throw new Exception("Error in getting message customer count ,"
+					+ e.getMessage());
+
+		} finally {
+			if (rs != null)
+				rs.close();
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
 		}
 	}
 
-	public int getUniqueCustomersMailsCount() {
+	public int getUniqueCustomersMailsCount() throws Exception {
 
 		int count = 0;
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
 		try {
 
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
-			ResultSet rs = stat
+			conn = getConnection();
+			stat = conn.createStatement();
+			rs = stat
 					.executeQuery("select count(DISTINCT emailId) as count from customer where emailId!=''");
 
 			while (rs.next()) {
@@ -380,26 +502,66 @@ public class Dbloader {
 
 			}
 
-			rs.close();
-			stat.close();
-			conn.setAutoCommit(true);
-			conn.close();
 			return count;
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Error in getting mails count ," + e.getMessage());
-			return -1;
+			throw new Exception("Error in getting mails count ,"
+					+ e.getMessage());
+		} finally {
+			if (rs != null)
+				rs.close();
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
 		}
 	}
 
-	public List<Customer> getUniqueMailsFromTable(String tableName) {
-		List<Customer> customers = new ArrayList<Customer>();
+	public int getCustomersCount() throws Exception {
 
+		int count = 0;
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
 		try {
+
+			conn = getConnection();
+			stat = conn.createStatement();
+			rs = stat.executeQuery("select count(id) as count from customer");
+
+			while (rs.next()) {
+				count = rs.getInt("count");
+
+			}
+
+			return count;
+		} catch (Exception e) {
+			LotteryLogger.getInstance().setError(
+					"Error in getting customers count ," + e.getMessage());
+			throw new Exception("Error in getting customers count");
+		} finally {
+			if (rs != null)
+				rs.close();
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
+		}
+	}
+
+	public List<Customer> getUniqueMailsFromTable(String tableName)
+			throws Exception {
+		List<Customer> customers = new ArrayList<Customer>();
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
+		try {
+
 			createMessageTable(tableName);
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
-			ResultSet rs = stat
+			conn = getConnection();
+			stat = conn.createStatement();
+			rs = stat
 					.executeQuery("select name,emailId  from customer where phoneNumber not in "
 							+ "(select emailId from "
 							+ tableName
@@ -416,176 +578,255 @@ public class Dbloader {
 				customers.add(customer);
 			}
 
-			rs.close();
-
-			conn.setAutoCommit(true);
-			conn.close();
 			return customers;
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Error in getting unique mails count ," + e.getMessage());
-			return customers;
+			throw new Exception("Error in getting unique mails count ,"
+					+ e.getMessage());
+		} finally {
+			if (rs != null)
+				rs.close();
+			if (stat != null)
+				stat.close();
+			if (conn != null)
+				conn.close();
 		}
 	}
 
 	public boolean insertProcess(String processName) throws Exception {
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
+		PreparedStatement prep = null;
+		;
 		try {
 			init();
-			Connection conn = getConnection();
+			conn = getConnection();
 
 			try {
-				Statement stat = conn.createStatement();
-				ResultSet rs = stat
+				stat = conn.createStatement();
+				rs = stat
 						.executeQuery("select id  from processes where processName='"
 								+ processName + "'");
 
 				while (rs.next()) {
-					rs.close();
-					stat.close();
-					conn.close();
 					return false;
 
 				}
 			} catch (Exception e) {
 				LotteryLogger.getInstance().setError(
 						"Error in checking process " + e.getMessage());
+				throw new Exception("Error in checking process");
+
+			} finally {
+				if (rs != null)
+					rs.close();
+				if (stat != null)
+					stat.close();
+				if (conn != null)
+					conn.close();
 			}
-			PreparedStatement prep = conn
-					.prepareStatement("insert into processes values ( null,"
-							+ "?,?, ?,?);");
+
+			conn.setAutoCommit(false);
+			prep = conn.prepareStatement("insert into processes values ( null,"
+					+ "?,?, ?,?);");
 
 			prep.setString(1, processName);
 
 			prep.setString(2, Util.formatDate(new Date()));
 			prep.setString(3, Util.formatDate(new Date()));
 			prep.addBatch();
-			conn.setAutoCommit(false);
-			prep.executeBatch();
-			conn.setAutoCommit(true);
-			prep.close();
-			conn.close();
 
+			prep.executeBatch();
+			conn.commit();
+			return true;
 		}
 
 		catch (Exception e) {
 			LotteryLogger.getInstance().setError("Error in inserting process");
-			return false;
+
+			if (conn != null)
+				conn.rollback();
+			throw new Exception("Database Error");
+		} finally {
+			if (prep != null)
+				prep.close();
+			if (conn != null)
+				conn.close();
 
 		}
-		return true;
 	}
 
-	public List<String> getProcesses() {
+	public List<String> getProcesses() throws Exception {
 		List<String> processes = new ArrayList<String>();
+		Connection conn = null;
+		Statement stat = null;
+		ResultSet rs = null;
+		PreparedStatement prep = null;
+
 		try {
 
-			Connection conn = getConnection();
-			Statement stat = conn.createStatement();
-			ResultSet rs = stat.executeQuery("select * from processes");
+			conn = getConnection();
+			stat = conn.createStatement();
+			rs = stat.executeQuery("select * from processes");
 
 			while (rs.next()) {
 				processes.add(rs.getString("processName"));
 			}
 
-			rs.close();
-			stat.close();
-			conn.setAutoCommit(true);
-			conn.close();
-
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError("Error in getting processes");
+			throw new Exception("Error in getting processes");
+
+		} finally {
+			if (rs != null)
+				rs.close();
+			if (prep != null)
+				prep.close();
+			if (conn != null)
+				conn.close();
 
 		}
 		return processes;
 	}
 
-	public void deleteProcess(String processName) {
+	public void deleteProcess(String processName) throws Exception {
+		Connection conn = null;
+		PreparedStatement prest = null;
+
 		try {
-			Connection conn = getConnection();
+			conn = getConnection();
 			String sql = "UPDATE processes SET deletedDate = ? ,updatedDate = ? WHERE processName='"
 					+ processName + "'";
-			PreparedStatement prest = conn.prepareStatement(sql);
+			prest = conn.prepareStatement(sql);
 			prest.setString(0, Util.formatDate(new Date()));
 
 			prest.setString(1, Util.formatDate(new Date()));
 
 			prest.executeUpdate();
-			conn.close();
+			conn.commit();
+
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Error in updating process delete date" + e.getMessage());
+			throw new Exception("Error in updating process date");
+		} finally {
+
+			if (prest != null)
+				prest.close();
+			if (conn != null)
+				conn.close();
+
 		}
 	}
 
 	public void updateMessageOfTable(String table, boolean isSend,
-			String status, String phoneNumber) {
+			String status, String phoneNumber) throws Exception {
+		Connection conn = null;
+		PreparedStatement prest = null;
 		try {
-			Connection conn = getConnection();
+			conn = getConnection();
 			String sql = "UPDATE "
 					+ table
 					+ "Messages SET isSend = ? , status = ? , updatedDate = ? WHERE "
 					+ Fields.phoneNumber + " = ?";
-			PreparedStatement prest = conn.prepareStatement(sql);
+			prest = conn.prepareStatement(sql);
 			prest.setBoolean(0, isSend);
 			prest.setString(1, status);
 			prest.setString(2, Util.formatDate(new Date()));
 			prest.setString(3, phoneNumber);
+			conn.setAutoCommit(false);
 			prest.executeUpdate();
-			conn.close();
+			conn.commit();
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Error in updating message table where table is" + table
 							+ e.getMessage());
+			throw new Exception("Error in updating process date");
+		} finally {
+
+			if (prest != null)
+				prest.close();
+			if (conn != null)
+				conn.close();
+
 		}
 	}
 
 	public void updateMailsOfTable(String table, boolean isSend, String status,
-			String emailId) {
+			String emailId) throws Exception {
+		Connection conn = null;
+		PreparedStatement prest = null;
 		try {
-			Connection conn = getConnection();
+			conn = getConnection();
 			String sql = "UPDATE "
 					+ table
 					+ "Messages SET isSend = ?  , status = ? ,updatedDate = ? WHERE "
 					+ Fields.emailId + " = ?";
-			PreparedStatement prest = conn.prepareStatement(sql);
+			prest = conn.prepareStatement(sql);
 			prest.setBoolean(0, isSend);
 			prest.setString(1, status);
 			prest.setString(2, Util.formatDate(new Date()));
 			prest.setString(3, emailId);
 			prest.executeUpdate();
-			conn.close();
+			conn.commit();
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Error in updating mails table where table is" + table
 							+ e.getMessage());
+			throw new Exception("Error in updating emails");
+		} finally {
+
+			if (prest != null)
+				prest.close();
+			if (conn != null)
+				conn.close();
+
 		}
 	}
 
 	public void updateCustomerMessage(String table, boolean isSend,
-			String status, String emailId) {
+			String status, String emailId) throws Exception {
+		Connection conn = null;
+		PreparedStatement prest = null;
 		try {
-			Connection conn = getConnection();
+			conn = getConnection();
 			String sql = "UPDATE "
 					+ table
 					+ "Messages SET isSend = ?  , status = ? ,updatedDate = ? WHERE "
 					+ Fields.emailId + " = ?";
-			PreparedStatement prest = conn.prepareStatement(sql);
+			prest = conn.prepareStatement(sql);
 			prest.setBoolean(0, isSend);
 			prest.setString(1, status);
 			prest.setString(2, Util.formatDate(new Date()));
 			prest.setString(3, emailId);
 			prest.executeUpdate();
-			conn.close();
+			conn.commit();
 		} catch (Exception e) {
-			// TODO: handle exception
+			LotteryLogger.getInstance().setError(
+					"Error in updating customer message where table is" + table
+							+ e.getMessage());
+			throw new Exception("Error in updating emails");
+		} finally {
+
+			if (prest != null)
+				prest.close();
+			if (conn != null)
+				conn.close();
+
 		}
 	}
 
-	public void insertbackupLotteries(List<Customer> customers) {
+	public void insertbackupLotteries(List<Customer> customers)
+			throws Exception {
+
+		Connection conn = null;
+
 		try {
 			init();
-			Connection conn = getConnection();
-
+			conn = getConnection();
+			conn.setAutoCommit(false);
 			for (Customer customer : customers) {
 
 				PreparedStatement prep = conn
@@ -610,35 +851,41 @@ public class Dbloader {
 				prep.setString(14, Util.formatDate(new Date()));
 				prep.setString(15, Util.formatDate(new Date()));
 				prep.addBatch();
-				conn.setAutoCommit(false);
 				prep.executeBatch();
-				conn.setAutoCommit(true);
 				prep.close();
-
 			}
-			conn.close();
+			conn.commit();
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
-					"Error in inserting backup dates" + e.getMessage());
+					"Error in inserting backup data" + e.getMessage());
+			if (conn != null)
+				conn.rollback();
+			throw new Exception("Error in inserting backup data");
+
+		} finally {
+			if (conn != null)
+				conn.close();
 
 		}
 	}
 
 	public void updateCustomer(Customer customer, boolean isMessageSend,
-			boolean isMailSend, String status) {
+			boolean isMailSend, String status) throws Exception {
+
+		Connection conn = null;
+		PreparedStatement prep = null;
 		try {
+
 			init();
 			String sql = "delete from customer where serialNumber="
 					+ customer.getSerialNumber();
-			Connection conn = getConnection();
-
+			conn = getConnection();
+			conn.setAutoCommit(false);
 			Statement stat = conn.createStatement();
 			stat.execute(sql);
-			PreparedStatement prep = conn
-					.prepareStatement("insert into customer values ( null,"
-							+ "?," + "?," + "?," + " ?," + "?," + " ?," + "?,"
-							+ "? ," + "? ," + "?," + "?," + "?,"
-							+ "? , ?, ?,?);");
+			prep = conn.prepareStatement("insert into customer values ( null,"
+					+ "?," + "?," + "?," + " ?," + "?," + " ?," + "?," + "? ,"
+					+ "? ," + "?," + "?," + "?," + "? , ?, ?,?);");
 
 			prep.setInt(1, customer.getSerialNumber());
 			prep.setString(2, "");
@@ -657,23 +904,36 @@ public class Dbloader {
 			prep.setString(14, Util.formatDate(new Date()));
 			prep.setString(15, Util.formatDate(new Date()));
 			prep.addBatch();
-			conn.setAutoCommit(false);
+
 			prep.executeBatch();
-			conn.setAutoCommit(true);
-			prep.close();
-			conn.close();
+			conn.commit();
+
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Error in updating customer" + e.getMessage());
+
+			throw new Exception("Error in inserting updating customers");
+
+		} finally {
+			if (prep != null)
+				prep.close();
+			if (conn != null)
+				conn.close();
+
 		}
+
 	}
 
 	public void savePendings(List<Customer> customers, boolean isMessageSend,
-			boolean isMailSend, String status) {
+			boolean isMailSend, String status) throws Exception {
+		Connection conn = null;
+		PreparedStatement prest = null;
+
 		try {
 			init();
 
-			Connection conn = getConnection();
+			conn = getConnection();
+			conn.setAutoCommit(false);
 
 			for (Customer customer : customers) {
 				String sql = "delete from customer where serialNumber="
@@ -713,17 +973,32 @@ public class Dbloader {
 				prep.setString(14, Util.formatDate(new Date()));
 				prep.setString(15, Util.formatDate(new Date()));
 				prep.addBatch();
-				conn.setAutoCommit(false);
+
 				prep.executeBatch();
-				conn.setAutoCommit(true);
+
 				prep.close();
 
 			}
-			conn.close();
+			conn.commit();
+
 		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Error in inserting pending customers" + e.getMessage());
+			if (conn != null)
+				conn.rollback();
+			throw new Exception("Error in inserting pending customers");
+
+		} finally {
+			if (conn != null)
+				conn.close();
+
 		}
+	}
+
+	public boolean dropDatabase() throws Exception {
+		File file = new File("lottery.db");
+		boolean result = file.delete();
+		return result;
 
 	}
 

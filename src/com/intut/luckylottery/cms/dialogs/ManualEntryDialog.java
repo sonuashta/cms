@@ -63,8 +63,9 @@ public class ManualEntryDialog extends Dialog {
 	 * 
 	 * @param parent
 	 * @param style
+	 * @throws Exception
 	 */
-	public ManualEntryDialog(Shell parent) {
+	public ManualEntryDialog(Shell parent) throws Exception {
 		super(parent);
 		setText("SWT Dialog");
 		modelProvider = new ManualEntrydialogModelProvider();
@@ -131,6 +132,7 @@ public class ManualEntryDialog extends Dialog {
 		lblNumber.setText("Number");
 
 		text_1 = new Text(grpCustomerInformation, SWT.BORDER);
+		modelProvider.setMobileText(text_1);
 		text_1.addVerifyListener(new VerifyListener() {
 			@Override
 			public void verifyText(VerifyEvent e) {
@@ -177,7 +179,8 @@ public class ManualEntryDialog extends Dialog {
 		lblDate.setLayoutData(fd_lblDate);
 		lblDate.setText("Date");
 
-		dateTime = new DateTime(grpCustomerInformation, SWT.BORDER | SWT.DROP_DOWN);
+		dateTime = new DateTime(grpCustomerInformation, SWT.BORDER
+				| SWT.DROP_DOWN);
 		FormData fd_dateTime = new FormData();
 		fd_dateTime.left = new FormAttachment(0, 10);
 		fd_dateTime.top = new FormAttachment(lblDate, 6);
@@ -357,9 +360,20 @@ public class ManualEntryDialog extends Dialog {
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				modelProvider.saveCustomer();
-				MessageDialog.openInformation(shell, "Success",
-						"Data saved in db");
+
+				if (!modelProvider.saveCustomer()) {
+					MessageDialog.openError(shell, "Error",
+							modelProvider.getErrorMessage());
+					if (!modelProvider.resetData())
+						MessageDialog.openError(shell, "Error",
+								modelProvider.getErrorMessage());
+				} else {
+					MessageDialog.openInformation(shell, "Success", "All data has been saved successfully");
+				}
+				if (!modelProvider.resetData())
+					MessageDialog.openError(shell, "Error",
+							modelProvider.getErrorMessage());
+
 			}
 		});
 		FormData fd_btnNewButton = new FormData();
@@ -390,7 +404,16 @@ public class ManualEntryDialog extends Dialog {
 		btnSendSms.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				modelProvider.sendAndDisplayMessage();
+				if (!modelProvider.sendAndDisplayMessage()) {
+					MessageDialog.openError(shell, "Error",
+							modelProvider.getErrorMessage());
+					if (!modelProvider.resetData())
+						MessageDialog.openError(shell, "Error",
+								modelProvider.getErrorMessage());
+				}
+				if (!modelProvider.resetData())
+					MessageDialog.openError(shell, "Error",
+							modelProvider.getErrorMessage());
 			}
 		});
 		FormData fd_btnSendSms = new FormData();
@@ -414,7 +437,10 @@ public class ManualEntryDialog extends Dialog {
 		btnReset.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				modelProvider.resetData();
+				if (!modelProvider.resetData()) {
+					MessageDialog.openError(shell, "Error in reseting Data",
+							modelProvider.getErrorMessage());
+				}
 			}
 		});
 		FormData fd_btnReset = new FormData();

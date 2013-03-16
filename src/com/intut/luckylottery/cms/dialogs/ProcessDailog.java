@@ -41,8 +41,9 @@ public class ProcessDailog extends Dialog {
 	 * 
 	 * @param parent
 	 * @param style
+	 * @throws Exception
 	 */
-	public ProcessDailog(Shell parent, String processName) {
+	public ProcessDailog(Shell parent, String processName) throws Exception {
 		super(parent);
 		setText("SWT Dialog");
 		modelProvider = new ProcessDialogModelProvider(processName);
@@ -124,7 +125,7 @@ public class ProcessDailog extends Dialog {
 		fd_text_2.left = new FormAttachment(0, 10);
 		text_2.setLayoutData(fd_text_2);
 		Button btnNewButton = new Button(shlProcess, SWT.NONE);
-		
+
 		fd_text.right = new FormAttachment(btnNewButton, 0, SWT.RIGHT);
 		FormData fd_btnNewButton = new FormData();
 		fd_btnNewButton.bottom = new FormAttachment(100, -10);
@@ -169,7 +170,12 @@ public class ProcessDailog extends Dialog {
 		btnProcessmails.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				modelProvider.processMails();
+				try {
+					modelProvider.processMails();
+				} catch (Exception e1) {
+					MessageDialog.openError(shlProcess,
+							"Error in processing mails", e1.getMessage());
+				}
 			}
 		});
 		FormData fd_btnProcessmails = new FormData();
@@ -178,7 +184,7 @@ public class ProcessDailog extends Dialog {
 		fd_btnProcessmails.right = new FormAttachment(btnNewButton, -6);
 		btnProcessmails.setLayoutData(fd_btnProcessmails);
 		btnProcessmails.setText("Process Mails");
-		
+
 		Label lblMessage = new Label(shlProcess, SWT.NONE);
 		lblMessage.setFont(SWTResourceManager.getFont("Segoe UI", 9, SWT.BOLD));
 		FormData fd_lblMessage = new FormData();
@@ -186,8 +192,9 @@ public class ProcessDailog extends Dialog {
 		fd_lblMessage.left = new FormAttachment(lblProcessName, 0, SWT.LEFT);
 		lblMessage.setLayoutData(fd_lblMessage);
 		lblMessage.setText("Message");
-		
-		text_5 = new Text(shlProcess, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+
+		text_5 = new Text(shlProcess, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL
+				| SWT.MULTI);
 		FormData fd_text_5 = new FormData();
 		fd_text_5.right = new FormAttachment(text, 0, SWT.RIGHT);
 		fd_text_5.bottom = new FormAttachment(lblMessage, 62, SWT.BOTTOM);
@@ -196,45 +203,70 @@ public class ProcessDailog extends Dialog {
 		text_5.setLayoutData(fd_text_5);
 		m_bindingContext = initDataBindings();
 
-		
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if(Util.isStringNullOrEmpty(text_5.getText()))
-				{
-					MessageDialog.openError(shlProcess, "Error", "please provide some message before starting this process");
+				if (Util.isStringNullOrEmpty(text_5.getText())) {
+					MessageDialog
+							.openError(shlProcess, "Error",
+									"please provide some message before starting this process");
 					return;
 				}
-				modelProvider.processMessages();
+
+				try {
+					modelProvider.processMessages();
+				} catch (Exception e1) {
+					MessageDialog.openError(shlProcess,
+							"Error in processing Messages", e1.getMessage());
+				}
 			}
 		});
 	}
+
 	protected DataBindingContext initDataBindings() {
 		DataBindingContext bindingContext = new DataBindingContext();
 		//
-		IObservableValue textObserveTextObserveWidget = SWTObservables.observeText(text, SWT.Modify);
-		IObservableValue modelProviderNameObserveValue = BeansObservables.observeValue(modelProvider, "name");
-		bindingContext.bindValue(textObserveTextObserveWidget, modelProviderNameObserveValue, null, null);
+		IObservableValue textObserveTextObserveWidget = SWTObservables
+				.observeText(text, SWT.Modify);
+		IObservableValue modelProviderNameObserveValue = BeansObservables
+				.observeValue(modelProvider, "name");
+		bindingContext.bindValue(textObserveTextObserveWidget,
+				modelProviderNameObserveValue, null, null);
 		//
-		IObservableValue text_1ObserveTextObserveWidget = SWTObservables.observeText(text_1, SWT.Modify);
-		IObservableValue modelProviderTotalObserveValue = BeansObservables.observeValue(modelProvider, "total");
-		bindingContext.bindValue(text_1ObserveTextObserveWidget, modelProviderTotalObserveValue, null, null);
+		IObservableValue text_1ObserveTextObserveWidget = SWTObservables
+				.observeText(text_1, SWT.Modify);
+		IObservableValue modelProviderTotalObserveValue = BeansObservables
+				.observeValue(modelProvider, "total");
+		bindingContext.bindValue(text_1ObserveTextObserveWidget,
+				modelProviderTotalObserveValue, null, null);
 		//
-		IObservableValue text_2ObserveTextObserveWidget = SWTObservables.observeText(text_2, SWT.Modify);
-		IObservableValue modelProviderLeftProcessesObserveValue = BeansObservables.observeValue(modelProvider, "leftProcesses");
-		bindingContext.bindValue(text_2ObserveTextObserveWidget, modelProviderLeftProcessesObserveValue, null, null);
+		IObservableValue text_2ObserveTextObserveWidget = SWTObservables
+				.observeText(text_2, SWT.Modify);
+		IObservableValue modelProviderLeftProcessesObserveValue = BeansObservables
+				.observeValue(modelProvider, "leftProcesses");
+		bindingContext.bindValue(text_2ObserveTextObserveWidget,
+				modelProviderLeftProcessesObserveValue, null, null);
 		//
-		IObservableValue text_3ObserveTextObserveWidget = SWTObservables.observeText(text_3, SWT.Modify);
-		IObservableValue modelProviderTotalEmailsObserveValue = BeansObservables.observeValue(modelProvider, "totalEmails");
-		bindingContext.bindValue(text_3ObserveTextObserveWidget, modelProviderTotalEmailsObserveValue, null, null);
+		IObservableValue text_3ObserveTextObserveWidget = SWTObservables
+				.observeText(text_3, SWT.Modify);
+		IObservableValue modelProviderTotalEmailsObserveValue = BeansObservables
+				.observeValue(modelProvider, "totalEmails");
+		bindingContext.bindValue(text_3ObserveTextObserveWidget,
+				modelProviderTotalEmailsObserveValue, null, null);
 		//
-		IObservableValue text_4ObserveTextObserveWidget = SWTObservables.observeText(text_4, SWT.Modify);
-		IObservableValue modelProviderLeftMailsObserveValue = BeansObservables.observeValue(modelProvider, "leftMails");
-		bindingContext.bindValue(text_4ObserveTextObserveWidget, modelProviderLeftMailsObserveValue, null, null);
+		IObservableValue text_4ObserveTextObserveWidget = SWTObservables
+				.observeText(text_4, SWT.Modify);
+		IObservableValue modelProviderLeftMailsObserveValue = BeansObservables
+				.observeValue(modelProvider, "leftMails");
+		bindingContext.bindValue(text_4ObserveTextObserveWidget,
+				modelProviderLeftMailsObserveValue, null, null);
 		//
-		IObservableValue text_5ObserveTextObserveWidget = SWTObservables.observeText(text_5, SWT.Modify);
-		IObservableValue modelProviderMessageObserveValue = BeansObservables.observeValue(modelProvider, "message");
-		bindingContext.bindValue(text_5ObserveTextObserveWidget, modelProviderMessageObserveValue, null, null);
+		IObservableValue text_5ObserveTextObserveWidget = SWTObservables
+				.observeText(text_5, SWT.Modify);
+		IObservableValue modelProviderMessageObserveValue = BeansObservables
+				.observeValue(modelProvider, "message");
+		bindingContext.bindValue(text_5ObserveTextObserveWidget,
+				modelProviderMessageObserveValue, null, null);
 		//
 		return bindingContext;
 	}

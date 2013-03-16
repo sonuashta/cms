@@ -1,6 +1,5 @@
 package com.intut.luckylottery.cms.modelProviders;
 
-import java.awt.Toolkit;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
@@ -14,9 +13,12 @@ import java.util.Date;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Text;
+
 import com.intut.luckylottery.cms.util.Constants;
 import com.intut.luckylottery.cms.util.LotteryLogger;
 import com.intut.luckylottery.cms.util.Util;
@@ -28,15 +30,36 @@ import com.intut.luckylottery.domain.NewCustomer;
 
 public class ManualEntrydialogModelProvider {
 
-	public ManualEntrydialogModelProvider() {
+	public ManualEntrydialogModelProvider() throws Exception {
 		newCustomer = new NewCustomer();
 		dbLoader = new Dbloader();
+
 		this.startingSerialNumber = dbLoader.getSerialNumber();
+
 		setSerialNumber("" + startingSerialNumber);
 		customers = new ArrayList<Customer>();
 		setDate(new Date());
 	}
 
+	private void errorMessage(final String message) {
+		Display.getCurrent().asyncExec(new Runnable() {
+
+			@Override
+			public void run() {
+				MessageDialog.openError(Display.getCurrent().getActiveShell(),
+						"Error", message);
+
+			}
+		});
+	}
+
+	public void setMobileText(Text text) {
+		mobileText = text;
+	}
+
+	private Text mobileText;
+	private boolean dbStatus;
+	private String dbErrorMessage;
 	private String name;
 	private String serialNumber;
 	private Date date;
@@ -145,8 +168,12 @@ public class ManualEntrydialogModelProvider {
 		propertyChangeSupport.removePropertyChangeListener(listener);
 	}
 
-	public void saveCustomer() {
+	public String getErrorMessage() {
+		return this.dbErrorMessage;
+	}
 
+	public boolean saveCustomer() {
+		dbStatus = true;
 		ProgressMonitorDialog dialog = new ProgressMonitorDialog(Display
 				.getCurrent().getActiveShell());
 
@@ -157,22 +184,26 @@ public class ManualEntrydialogModelProvider {
 					// begin task
 					monitor.worked(1);
 
-					dbLoader.savePendings(getCustomers(), false, false,
-							Constants.pendingMessage);
+					try {
+						dbLoader.savePendings(getCustomers(), false, false,
+								Constants.pendingMessage);
+					} catch (Exception e) {
+						dbErrorMessage = e.getMessage();
+						dbStatus = false;
+					}
+
 					monitor.setTaskName("Done");
 
 					monitor.done();
-					resetData();
+
 				}
 			});
-		} catch (InvocationTargetException e) {
+		} catch (Exception e) {
 			LotteryLogger.getInstance().setError(
 					"Progress Dialog Error:" + e.getMessage());
 
-		} catch (InterruptedException e) {
-			LotteryLogger.getInstance().setError(
-					"Progress Dialog Error:" + e.getMessage());
 		}
+		return dbStatus;
 	}
 
 	private List<Customer> getCustomers() {
@@ -215,10 +246,11 @@ public class ManualEntrydialogModelProvider {
 		return customers;
 	}
 
-	public void sendAndDisplayMessage() {
+	public boolean sendAndDisplayMessage() {
 		ProgressMonitorDialog dialog = new ProgressMonitorDialog(Display
 				.getCurrent().getActiveShell());
-
+		dbStatus = true;
+		dbErrorMessage="";
 		try {
 			dialog.run(true, true, new IRunnableWithProgress() {
 				public void run(IProgressMonitor monitor) {
@@ -226,13 +258,7 @@ public class ManualEntrydialogModelProvider {
 					// begin task
 					monitor.worked(1);
 
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						LotteryLogger.getInstance().setError(
-								"Error while forcing thread to sleep"
-										+ e.getMessage());
-					}
+					
 
 					monitor.setTaskName("Sending Message where message is "
 							+ filterMessageText());
@@ -240,24 +266,23 @@ public class ManualEntrydialogModelProvider {
 					boolean isMessageSend = false;
 					if (message.getCode() == HttpURLConnection.HTTP_OK)
 						isMessageSend = true;
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						LotteryLogger.getInstance().setError(
-								"Error while forcing thread to sleep"
-										+ e.getMessage());
-					}
+					
 					monitor.worked(2);
 					monitor.setTaskName("Saving to database");
 					// TODO add mail send functionality
 					boolean isMailSend = true;
-					dbLoader.savePendings(getCustomers(), isMessageSend,
-							isMailSend, message.getMessage() + ",and code is "
-									+ message.getCode());
+					try {
+						dbLoader.savePendings(getCustomers(), isMessageSend,
+								isMailSend, message.getMessage()
+										+ ",and code is " + message.getCode());
+					} catch (Exception e) {
+						dbStatus = false;
+						dbErrorMessage = e.getMessage();
+					}
 					monitor.setTaskName("Done");
 
 					monitor.done();
-					resetData();
+
 				}
 			});
 		} catch (InvocationTargetException e) {
@@ -268,16 +293,9 @@ public class ManualEntrydialogModelProvider {
 			LotteryLogger.getInstance().setError(
 					"Progress Dialog Error:" + e.getMessage());
 		}
+		
+		return dbStatus;
 
-	}
-
-	private int getTicketCount() {
-		int count = 0;
-		if (!Util.isStringNullOrEmpty(bumperTickets))
-			count += bumperTickets.split(",").length;
-		if (!Util.isStringNullOrEmpty(monthlyTickets))
-			count += bumperTickets.split(",").length;
-		return count;
 	}
 
 	private int getBumperTicketCount() {
@@ -328,7 +346,10 @@ public class ManualEntrydialogModelProvider {
 
 	public Message sendSms() {
 		Message message = new Message();
-		
+		message.setCode(200);
+		message.setMessage("Testing");
+		if (message.getCode() == 200)
+			return message;
 		String str;
 
 		String messageText = filterMessageText();
@@ -423,15 +444,34 @@ public class ManualEntrydialogModelProvider {
 				this.sendSMSButton, this.sendSMSButton = sendSMSButton);
 	}
 
-	public void resetData() {
+	public void resetMobileText() {
+		Display.getCurrent().asyncExec(new Runnable() {
+
+			@Override
+			public void run() {
+				mobileText.setText("");
+
+			}
+		});
+	}
+
+	public boolean resetData() {
+		dbStatus = true;
+		dbErrorMessage="";
 		setDate(new Date());
 		setBumperTickets("");
 		setEmailId("");
 		setAddress("");
 		setMonthlyTickets("");
 		setName("");
-		setPhoneNumber("");
-		setSerialNumber("" + dbLoader.getSerialNumber());
+		resetMobileText();
+		try {
+			setSerialNumber("" + dbLoader.getSerialNumber());
+		} catch (Exception e) {
+			dbStatus = false;
+			dbErrorMessage = e.getMessage();
+		}
+		return dbStatus;
 	}
 
 }

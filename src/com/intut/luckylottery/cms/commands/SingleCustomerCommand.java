@@ -4,6 +4,7 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.commands.IHandlerListener;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
 import com.intut.luckylottery.cms.dialogs.ManualEntryDialog;
@@ -24,9 +25,16 @@ public class SingleCustomerCommand implements IHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		ManualEntryDialog dialog = new ManualEntryDialog(Display.getCurrent()
-				.getActiveShell());
-		dialog.open();
+		ManualEntryDialog dialog;
+		try {
+			dialog = new ManualEntryDialog(Display.getCurrent()
+					.getActiveShell());
+			dialog.open();
+		} catch (Exception e) {
+			MessageDialog.openError(Display.getCurrent().getActiveShell(),
+					"Error in opening Entry Dialog", e.getMessage());
+		}
+
 		return null;
 	}
 
