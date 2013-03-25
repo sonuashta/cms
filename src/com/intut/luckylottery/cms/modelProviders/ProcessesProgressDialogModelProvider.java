@@ -9,12 +9,12 @@ import java.net.URI;
 import java.net.URL;
 import java.util.List;
 
+import com.intut.luckylottery.cms.crudDatabase.Dbloader;
 import com.intut.luckylottery.cms.customEvents.*;
+import com.intut.luckylottery.cms.domain.Customer;
+import com.intut.luckylottery.cms.domain.Message;
 import com.intut.luckylottery.cms.util.LotteryLogger;
 import com.intut.luckylottery.cms.util.Util;
-import com.intut.luckylottery.crudDatabase.Dbloader;
-import com.intut.luckylottery.domain.Customer;
-import com.intut.luckylottery.domain.Message;
 
 public class ProcessesProgressDialogModelProvider {
 	private String labelMessage = "";
@@ -67,12 +67,12 @@ public class ProcessesProgressDialogModelProvider {
 						dbloader.insertMessageData(tableName, customer,
 								isMessageSend, message1.getMessage());
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						LotteryLogger.getInstance().setError(
+								"Error in sending message" + e.getMessage());
 					}
-					
+
 				}
-				
+
 				setLogMessage(getLogMessage() + "\n" + "Completed");
 				setLabelMessage("Completed!");
 			}
@@ -89,7 +89,10 @@ public class ProcessesProgressDialogModelProvider {
 
 	public Message sendSms(String messageText, String number) {
 		Message message1 = new Message();
-
+		message1.setCode(200);
+		message1.setMessage("Testing");
+		if (message1.getCode() == 200)
+			return message1;
 		String str;
 
 		if (Util.isStringNullOrEmpty(messageText))

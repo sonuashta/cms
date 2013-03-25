@@ -20,12 +20,13 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 
+import com.intut.luckylottery.cms.crudDatabase.Dbloader;
 import com.intut.luckylottery.cms.util.Util;
-import com.intut.luckylottery.crudDatabase.Dbloader;
 import org.eclipse.wb.swt.SWTResourceManager;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.wb.swt.ResourceManager;
 
 public class ProcessesDialog extends Dialog {
 
@@ -71,6 +72,7 @@ public class ProcessesDialog extends Dialog {
 	private void createContents() {
 		shlProcesses = new Shell(getParent(), SWT.DIALOG_TRIM
 				| SWT.APPLICATION_MODAL);
+		shlProcesses.setImage(ResourceManager.getPluginImage("com.intut.luckylottery.cms", "icons/appIcons/toolbar/process-icon.png"));
 
 		shlProcesses.setBounds(Util.setBouunds(800, 600));
 		shlProcesses.setText("Processes");
@@ -98,7 +100,8 @@ public class ProcessesDialog extends Dialog {
 						addProcess(composite_1, processName);
 					}
 				} catch (Exception e1) {
-					MessageDialog.openError(shlProcesses, "Error", "");
+					MessageDialog.openError(shlProcesses, "Error",
+							e1.getMessage());
 				}
 
 			}
@@ -173,7 +176,7 @@ public class ProcessesDialog extends Dialog {
 			for (String process : processes)
 				addProcess(composite_1, process);
 		} catch (Exception e) {
-			// TODO: handle exception
+			MessageDialog.openError(shlProcesses, "", e.getMessage());
 		}
 	}
 

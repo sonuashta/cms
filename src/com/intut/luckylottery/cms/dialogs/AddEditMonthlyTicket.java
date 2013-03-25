@@ -13,11 +13,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Combo;
 
+import com.intut.luckylottery.cms.dummydata.GetDummyData;
 import com.intut.luckylottery.cms.modelProviders.AddEditTicketModelProvider;
 import com.intut.luckylottery.cms.modelProviders.ManualEntrydialogModelProvider;
 import com.intut.luckylottery.cms.util.Util;
 
-import dummydata.GetDummyData;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.core.databinding.DataBindingContext;

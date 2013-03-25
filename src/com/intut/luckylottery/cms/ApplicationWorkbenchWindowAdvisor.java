@@ -9,6 +9,7 @@ import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
+import com.intut.luckylottery.cms.crudDatabase.Dbloader;
 import com.intut.luckylottery.cms.util.LotteryLogger;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
@@ -25,18 +26,22 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
 	public void preWindowOpen() {
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		Dimension dim=Toolkit.getDefaultToolkit().getScreenSize();
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		configurer.setInitialSize(new Point(dim.width, dim.height));
 		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(false);
 		configurer.setTitle("Lucky Lottery");
 		LotteryLogger.getInstance().setInfo("Logger working");
 	}
+
 	@Override
 	public void postWindowOpen() {
-		 super.postWindowOpen();
-		
+		super.postWindowOpen();
+		Dbloader loader = new Dbloader();
+		try {
+			loader.createBumperTable();
+		} catch (Exception e) {
 
-		
+		}
 	}
 }

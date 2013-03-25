@@ -10,15 +10,19 @@
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
+   <windowImages i16="/com.intut.luckylottery.cms/icons/appIcons/branding/favicon16x16.png" i32="/com.intut.luckylottery.cms/icons/appIcons/branding/favicon32x32.png" i48="/com.intut.luckylottery.cms/icons/appIcons/branding/favicon48x48.png" i64="/com.intut.luckylottery.cms/icons/appIcons/branding/favicon64x64.png" i128="/com.intut.luckylottery.cms/icons/appIcons/branding/favicon128x128.png"/>
+
    <splash
       location="com.intut.luckylottery.cms"
-      startupProgressRect="5,265,388,20"
+      startupProgressRect="0,265,388,20"
       startupMessageRect="10,240,350,20"
       startupForegroundColor="000000" />
    <launcher name="CMS">
       <solaris/>
-      <win useIco="false">
-         <bmp/>
+      <win useIco="true">
+         <ico path="/com.intut.luckylottery.cms/icons/appIcons/Untitled-3.ico"/>
+         <bmp
+            winSmallLow="/com.intut.luckylottery.cms/icons/appIcons/launcher/favicon16x168bit.bmp"/>
       </win>
    </launcher>
 

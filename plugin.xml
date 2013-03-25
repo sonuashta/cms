@@ -66,8 +66,8 @@
             </command>
             <command
                   commandId="com.intut.luckylottery.cms.multiCustomerCommand"
-                  icon="icons/appIcons/toolbar/family.png"
-                  label="Backup Customers"
+                  icon="icons/appIcons/toolbar/Upload.png"
+                  label="Upload Files"
                   mode="FORCE_TEXT"
                   style="push">
             </command>
@@ -75,6 +75,20 @@
                   commandId="com.intut.luckylottery.cms.processesCommand"
                   icon="icons/appIcons/toolbar/process-icon.png"
                   label="Processes"
+                  mode="FORCE_TEXT"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.intut.luckylottery.cms.reportCommand"
+                  icon="icons/appIcons/report32.png"
+                  label="Report "
+                  mode="FORCE_TEXT"
+                  style="push">
+            </command>
+            <command
+                  commandId="com.intut.luckylottery.cms.addLotteryCommand"
+                  icon="icons/appIcons/toolbar/1363818154_banknote.png"
+                  label="Lottery"
                   mode="FORCE_TEXT"
                   style="push">
             </command>
@@ -98,6 +112,16 @@
             id="com.intut.luckylottery.cms.processesCommand"
             name="Process Command">
       </command>
+      <command
+            defaultHandler="com.intut.luckylottery.cms.commands.ReportCommand"
+            id="com.intut.luckylottery.cms.reportCommand"
+            name="Report">
+      </command>
+      <command
+            defaultHandler="com.intut.luckylottery.cms.commands.AddLotteryCommand"
+            id="com.intut.luckylottery.cms.addLotteryCommand"
+            name="Add Lottery">
+      </command>
    </extension>
    <extension
          id="product"
@@ -119,11 +143,15 @@
          </property>
          <property
                name="startupProgressRect"
-               value="5,265,388,20">
+               value="0,265,388,20">
          </property>
          <property
                name="preferenceCustomization"
                value="plugin_customization.ini">
+         </property>
+         <property
+               name="windowImages"
+               value="icons/appIcons/branding/favicon16x16.png,icons/appIcons/branding/favicon32x32.png,icons/appIcons/branding/favicon48x48.png,icons/appIcons/branding/favicon64x64.png,icons/appIcons/branding/favicon128x128.png">
          </property>
       </product>
    </extension>

@@ -22,6 +22,7 @@ import org.eclipse.core.databinding.beans.BeansObservables;
 import org.eclipse.wb.swt.SWTResourceManager;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.wb.swt.ResourceManager;
 
 public class ProcessDailog extends Dialog {
 	private DataBindingContext m_bindingContext;
@@ -72,6 +73,7 @@ public class ProcessDailog extends Dialog {
 	 */
 	private void createContents() {
 		shlProcess = new Shell(getParent());
+		shlProcess.setImage(ResourceManager.getPluginImage("com.intut.luckylottery.cms", "icons/appIcons/toolbar/process-icon.png"));
 		shlProcess.setSize(552, 400);
 		shlProcess.setText("Process");
 		shlProcess.setLayout(new FormLayout());
@@ -94,14 +96,14 @@ public class ProcessDailog extends Dialog {
 		lblTotalCustomers.setLayoutData(fd_lblTotalCustomers);
 		lblTotalCustomers.setText("Total Number of Messages");
 
-		text = new Text(shlProcess, SWT.BORDER);
+		text = new Text(shlProcess, SWT.BORDER | SWT.READ_ONLY);
 		fd_lblTotalCustomers.top = new FormAttachment(text, 7);
 		FormData fd_text = new FormData();
 		fd_text.top = new FormAttachment(lblProcessName, 6);
 		fd_text.left = new FormAttachment(lblProcessName, 0, SWT.LEFT);
 		text.setLayoutData(fd_text);
 
-		text_1 = new Text(shlProcess, SWT.BORDER);
+		text_1 = new Text(shlProcess, SWT.BORDER | SWT.READ_ONLY);
 		FormData fd_text_1 = new FormData();
 		fd_text_1.top = new FormAttachment(lblTotalCustomers, 6);
 		fd_text_1.left = new FormAttachment(0, 10);
@@ -118,7 +120,7 @@ public class ProcessDailog extends Dialog {
 		lblProcessesLeft.setLayoutData(fd_lblProcessesLeft);
 		lblProcessesLeft.setText("Messages Left");
 
-		text_2 = new Text(shlProcess, SWT.BORDER);
+		text_2 = new Text(shlProcess, SWT.BORDER | SWT.READ_ONLY);
 		FormData fd_text_2 = new FormData();
 		fd_text_2.right = new FormAttachment(text, 0, SWT.RIGHT);
 		fd_text_2.top = new FormAttachment(lblProcessesLeft, 6);
@@ -142,7 +144,7 @@ public class ProcessDailog extends Dialog {
 		lblTotalEmails.setLayoutData(fd_lblTotalEmails);
 		lblTotalEmails.setText("Total Emails");
 
-		text_3 = new Text(shlProcess, SWT.BORDER);
+		text_3 = new Text(shlProcess, SWT.BORDER | SWT.READ_ONLY);
 		FormData fd_text_3 = new FormData();
 		fd_text_3.right = new FormAttachment(text, 0, SWT.RIGHT);
 		fd_text_3.top = new FormAttachment(lblTotalEmails, 6);
@@ -158,7 +160,7 @@ public class ProcessDailog extends Dialog {
 		lblNewLabel.setLayoutData(fd_lblNewLabel);
 		lblNewLabel.setText("Emails to be Processed");
 
-		text_4 = new Text(shlProcess, SWT.BORDER);
+		text_4 = new Text(shlProcess, SWT.BORDER | SWT.READ_ONLY);
 		FormData fd_text_4 = new FormData();
 		fd_text_4.right = new FormAttachment(text, 0, SWT.RIGHT);
 		fd_text_4.top = new FormAttachment(lblNewLabel, 4);

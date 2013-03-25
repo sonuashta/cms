@@ -10,11 +10,11 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.intut.luckylottery.cms.customEvents.PropertyChangeEvent;
 import com.intut.luckylottery.cms.customEvents.PropertyChangeListener;
+import com.intut.luckylottery.cms.domain.Customer;
 import com.intut.luckylottery.cms.modelProviders.ProcessDialogModelProvider;
 import com.intut.luckylottery.cms.modelProviders.ProcessesProgressDialogModelProvider;
 import com.intut.luckylottery.cms.modelProviders.ProgressDialogModelProvider;
 import com.intut.luckylottery.cms.util.Util;
-import com.intut.luckylottery.domain.Customer;
 
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Label;

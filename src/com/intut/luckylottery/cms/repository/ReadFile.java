@@ -3,8 +3,8 @@ package com.intut.luckylottery.cms.repository;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.intut.luckylottery.cms.domain.NewCustomer;
 import com.intut.luckylottery.cms.util.Util;
-import com.intut.luckylottery.domain.NewCustomer;
 
 public class ReadFile {
 

@@ -13,20 +13,19 @@ import java.util.Date;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 
+import com.intut.luckylottery.cms.crudDatabase.Dbloader;
+import com.intut.luckylottery.cms.domain.Customer;
+import com.intut.luckylottery.cms.domain.Fields;
+import com.intut.luckylottery.cms.domain.Message;
+import com.intut.luckylottery.cms.domain.NewCustomer;
 import com.intut.luckylottery.cms.util.Constants;
 import com.intut.luckylottery.cms.util.LotteryLogger;
 import com.intut.luckylottery.cms.util.Util;
-import com.intut.luckylottery.crudDatabase.Dbloader;
-import com.intut.luckylottery.domain.Customer;
-import com.intut.luckylottery.domain.Fields;
-import com.intut.luckylottery.domain.Message;
-import com.intut.luckylottery.domain.NewCustomer;
 
 public class ManualEntrydialogModelProvider {
 
@@ -39,24 +38,14 @@ public class ManualEntrydialogModelProvider {
 		setSerialNumber("" + startingSerialNumber);
 		customers = new ArrayList<Customer>();
 		setDate(new Date());
-	}
-
-	private void errorMessage(final String message) {
-		Display.getCurrent().asyncExec(new Runnable() {
-
-			@Override
-			public void run() {
-				MessageDialog.openError(Display.getCurrent().getActiveShell(),
-						"Error", message);
-
-			}
-		});
+		setConfigBumper(dbLoader.getSelectedBumper());
 	}
 
 	public void setMobileText(Text text) {
 		mobileText = text;
 	}
 
+	private String configBumper;
 	private Text mobileText;
 	private boolean dbStatus;
 	private String dbErrorMessage;
@@ -113,6 +102,7 @@ public class ManualEntrydialogModelProvider {
 	}
 
 	public void setSerialNumber(String serialNumber) {
+		this.startingSerialNumber = Integer.parseInt(serialNumber);
 		propertyChangeSupport.firePropertyChange("serialNumber",
 				this.serialNumber, this.serialNumber = serialNumber);
 	}
@@ -172,6 +162,22 @@ public class ManualEntrydialogModelProvider {
 		return this.dbErrorMessage;
 	}
 
+	public void logMessage() {
+		String msg = "Message sent to ";
+		msg += "name:";
+		msg += Util.isStringNullOrEmpty(getName()) ? "---" : getName();
+		msg += "number:";
+		msg += Util.isStringNullOrEmpty(getPhoneNumber()) ? "---"
+				: getPhoneNumber();
+		msg += "bumpertickets:";
+		msg += Util.isStringNullOrEmpty(bumperTickets) ? "---" : bumperTickets;
+		msg += "monthly:";
+		msg += Util.isStringNullOrEmpty(monthlyTickets) ? "---"
+				: monthlyTickets;
+		msg += "on " + new Date();
+		LotteryLogger.getInstance().setInfo(msg);
+	}
+
 	public boolean saveCustomer() {
 		dbStatus = true;
 		ProgressMonitorDialog dialog = new ProgressMonitorDialog(Display
@@ -213,7 +219,8 @@ public class ManualEntrydialogModelProvider {
 		if (!Util.isStringNullOrEmpty(bumperTickets)) {
 			String bumperList[] = bumperTickets.split(",");
 			for (String string : bumperList) {
-
+				if (Util.isStringNullOrEmpty(string))
+					continue;
 				Customer customer = new Customer();
 				customer.setName(getName());
 				customer.setAddress(getAddress());
@@ -231,6 +238,8 @@ public class ManualEntrydialogModelProvider {
 		if (!Util.isStringNullOrEmpty(monthlyTickets)) {
 			String monthlyList[] = monthlyTickets.split(",");
 			for (String string : monthlyList) {
+				if (Util.isStringNullOrEmpty(string))
+					continue;
 				Customer customer = new Customer();
 				customer.setAddress(getAddress());
 				customer.setDate(getDate());
@@ -250,7 +259,7 @@ public class ManualEntrydialogModelProvider {
 		ProgressMonitorDialog dialog = new ProgressMonitorDialog(Display
 				.getCurrent().getActiveShell());
 		dbStatus = true;
-		dbErrorMessage="";
+		dbErrorMessage = "";
 		try {
 			dialog.run(true, true, new IRunnableWithProgress() {
 				public void run(IProgressMonitor monitor) {
@@ -258,15 +267,13 @@ public class ManualEntrydialogModelProvider {
 					// begin task
 					monitor.worked(1);
 
-					
-
 					monitor.setTaskName("Sending Message where message is "
 							+ filterMessageText());
 					Message message = sendSms();
 					boolean isMessageSend = false;
 					if (message.getCode() == HttpURLConnection.HTTP_OK)
 						isMessageSend = true;
-					
+
 					monitor.worked(2);
 					monitor.setTaskName("Saving to database");
 					// TODO add mail send functionality
@@ -293,7 +300,7 @@ public class ManualEntrydialogModelProvider {
 			LotteryLogger.getInstance().setError(
 					"Progress Dialog Error:" + e.getMessage());
 		}
-		
+
 		return dbStatus;
 
 	}
@@ -313,15 +320,18 @@ public class ManualEntrydialogModelProvider {
 	}
 
 	private String filterMessageText() {
-		String messageText = "Thanks for buying ticket(s) with Lucky Lottery.";
+		String messageText = "Lucky Lottery Agency Zirakpur.";
 		int monthlyCount = getMonthlyTicketCount();
 		int bumperCount = getBumperTicketCount();
-		if ((monthlyCount + bumperCount) >= 5)
-			messageText += "Total No. of tickets bought is: "
+		if ((monthlyCount + bumperCount) >= 5) {
+			messageText += "Your ";
+			if (bumperCount > 0)
+				messageText += "bumper tickets count is " + bumperCount
+						+ ", and ";
+			messageText += "monthly count is " + monthlyCount
 					+ (monthlyCount + bumperCount) + ", where bumper count is "
 					+ bumperCount + " and monthly count is " + monthlyCount;
-		else {
-
+		} else {
 			String message = "Your bumper tickets are ";
 			if (!Util.isStringNullOrEmpty(bumperTickets)) {
 				for (String s : bumperTickets.split(",")) {
@@ -341,15 +351,12 @@ public class ManualEntrydialogModelProvider {
 			}
 			messageText += message.replaceAll(",$", "");
 		}
-		return messageText;
+		return messageText
+				+ ". for info www.luckylotteryagency.com, 9815788878";
 	}
 
 	public Message sendSms() {
 		Message message = new Message();
-		message.setCode(200);
-		message.setMessage("Testing");
-		if (message.getCode() == 200)
-			return message;
 		String str;
 
 		String messageText = filterMessageText();
@@ -457,7 +464,7 @@ public class ManualEntrydialogModelProvider {
 
 	public boolean resetData() {
 		dbStatus = true;
-		dbErrorMessage="";
+		dbErrorMessage = "";
 		setDate(new Date());
 		setBumperTickets("");
 		setEmailId("");
@@ -472,6 +479,14 @@ public class ManualEntrydialogModelProvider {
 			dbErrorMessage = e.getMessage();
 		}
 		return dbStatus;
+	}
+
+	public String getConfigBumper() {
+		return configBumper;
+	}
+
+	public void setConfigBumper(String configBumper) {
+		this.configBumper = configBumper;
 	}
 
 }

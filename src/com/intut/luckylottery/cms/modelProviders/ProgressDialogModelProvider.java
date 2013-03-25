@@ -11,12 +11,13 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
+import com.intut.luckylottery.cms.crudDatabase.Dbloader;
 import com.intut.luckylottery.cms.customEvents.*;
+import com.intut.luckylottery.cms.domain.Customer;
+import com.intut.luckylottery.cms.domain.Fields;
 import com.intut.luckylottery.cms.util.Constants;
+import com.intut.luckylottery.cms.util.LotteryLogger;
 import com.intut.luckylottery.cms.util.Util;
-import com.intut.luckylottery.crudDatabase.Dbloader;
-import com.intut.luckylottery.domain.Customer;
-import com.intut.luckylottery.domain.Fields;
 
 public class ProgressDialogModelProvider {
 	private String labelMessage = "";
@@ -60,7 +61,8 @@ public class ProgressDialogModelProvider {
 						dbloader.updateCustomer(customer, false, false,
 								Constants.pendingMessage);
 					} catch (Exception e) {
-						
+						LotteryLogger.getInstance().setError(
+								"Error in sending message" + e.getMessage());
 					}
 				}
 				setLogMessage(getLogMessage() + "\n" + "Completed");

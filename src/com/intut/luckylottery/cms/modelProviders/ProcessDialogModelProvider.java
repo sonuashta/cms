@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.eclipse.swt.widgets.Display;
 
+import com.intut.luckylottery.cms.crudDatabase.Dbloader;
 import com.intut.luckylottery.cms.dialogs.ProcessesProgressDialog;
-import com.intut.luckylottery.crudDatabase.Dbloader;
-import com.intut.luckylottery.domain.Customer;
+import com.intut.luckylottery.cms.domain.Customer;
 
 public class ProcessDialogModelProvider {
 	public ProcessDialogModelProvider(String processName) throws Exception {

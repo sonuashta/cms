@@ -23,10 +23,10 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 
+import com.intut.luckylottery.cms.dummydata.GetDummyData;
 import com.intut.luckylottery.cms.modelProviders.ManualEntrydialogModelProvider;
+import com.intut.luckylottery.cms.util.LotteryLogger;
 import com.intut.luckylottery.cms.util.Util;
-
-import dummydata.GetDummyData;
 
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
@@ -34,8 +34,7 @@ import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.core.databinding.beans.BeansObservables;
 import org.eclipse.wb.swt.SWTResourceManager;
 import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.wb.swt.ResourceManager;
 
 public class ManualEntryDialog extends Dialog {
 	private DataBindingContext m_bindingContext;
@@ -94,6 +93,9 @@ public class ManualEntryDialog extends Dialog {
 	 */
 	private void createContents() {
 		shell = new Shell(getParent(), SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
+		shell.setImage(ResourceManager.getPluginImage(
+				"com.intut.luckylottery.cms",
+				"icons/appIcons/toolbar/edit-user.png"));
 		shell.setBounds(Util.setBouunds(700, 550));
 		shell.setText("Add Customer");
 		shell.setLayout(new FormLayout());
@@ -129,7 +131,7 @@ public class ManualEntryDialog extends Dialog {
 		fd_lblNumber.top = new FormAttachment(text, 6);
 		fd_lblNumber.left = new FormAttachment(0, 10);
 		lblNumber.setLayoutData(fd_lblNumber);
-		lblNumber.setText("Number");
+		lblNumber.setText("Phone Number");
 
 		text_1 = new Text(grpCustomerInformation, SWT.BORDER);
 		modelProvider.setMobileText(text_1);
@@ -278,12 +280,11 @@ public class ManualEntryDialog extends Dialog {
 		combo = new Combo(composite_1, SWT.READ_ONLY);
 		fd_text_3.top = new FormAttachment(combo, 6);
 		FormData fd_combo = new FormData();
-		fd_combo.bottom = new FormAttachment(100, -399);
 		fd_combo.top = new FormAttachment(0, 9);
 		fd_combo.right = new FormAttachment(100, -10);
 		combo.setLayoutData(fd_combo);
 		combo.setItems(GetDummyData.getBumperNames());
-		combo.setText(combo.getItem(0));
+		combo.setText(modelProvider.getConfigBumper());
 		Label lblSelectBumper = new Label(composite_1, SWT.NONE);
 		FormData fd_lblSelectBumper = new FormData();
 		fd_lblSelectBumper.bottom = new FormAttachment(lblNewLabel_1, 0,
@@ -354,13 +355,24 @@ public class ManualEntryDialog extends Dialog {
 		fd_lblNewLabel_2.right = new FormAttachment(combo_1, -6);
 		lblNewLabel_2.setLayoutData(fd_lblNewLabel_2);
 		lblNewLabel_2.setText("Select Bumper");
-		combo_1.setText(combo.getItem(0));
+		combo_1.setText(modelProvider.getConfigBumper());
 		btnNewButton = new Button(shell, SWT.NONE);
+		btnNewButton.setToolTipText("Save");
+		btnNewButton.setImage(ResourceManager
+				.getPluginImage("com.intut.luckylottery.cms",
+						"icons/appIcons/database-b-w.png"));
 		fd_tabFolder.right = new FormAttachment(btnNewButton, 0, SWT.RIGHT);
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-
+				if (Util.isStringNullOrEmpty(modelProvider.getName())) {
+					boolean result = MessageDialog.openConfirm(shell,
+							"Are you sure?",
+							"Are sure you want to skip name of a customer?");
+					if (!result)
+						return;
+				}
+				modelProvider.logMessage();
 				if (!modelProvider.saveCustomer()) {
 					MessageDialog.openError(shell, "Error",
 							modelProvider.getErrorMessage());
@@ -368,7 +380,8 @@ public class ManualEntryDialog extends Dialog {
 						MessageDialog.openError(shell, "Error",
 								modelProvider.getErrorMessage());
 				} else {
-					MessageDialog.openInformation(shell, "Success", "All data has been saved successfully");
+					MessageDialog.openInformation(shell, "Success",
+							"All data has been saved successfully");
 				}
 				if (!modelProvider.resetData())
 					MessageDialog.openError(shell, "Error",
@@ -398,12 +411,23 @@ public class ManualEntryDialog extends Dialog {
 		serialNumberText.setLayoutData(fd_serialNumberText);
 		fd_btnNewButton.right = new FormAttachment(100, -10);
 		btnNewButton.setLayoutData(fd_btnNewButton);
-		btnNewButton.setText("Save");
 
 		btnSendSms = new Button(shell, SWT.NONE);
+		btnSendSms.setToolTipText("Send Sms");
+		btnSendSms.setImage(ResourceManager
+				.getPluginImage("com.intut.luckylottery.cms",
+						"icons/appIcons/send-sms-b-w.png"));
 		btnSendSms.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				if (Util.isStringNullOrEmpty(modelProvider.getName())) {
+					boolean result = MessageDialog.openConfirm(shell,
+							"Are you sure?",
+							"Are sure you want to skip name of a customer?");
+					if (!result)
+						return;
+				}
+				modelProvider.logMessage();
 				if (!modelProvider.sendAndDisplayMessage()) {
 					MessageDialog.openError(shell, "Error",
 							modelProvider.getErrorMessage());
@@ -420,7 +444,6 @@ public class ManualEntryDialog extends Dialog {
 		fd_btnSendSms.top = new FormAttachment(btnNewButton, 0, SWT.TOP);
 		fd_btnSendSms.right = new FormAttachment(btnNewButton, -6);
 		btnSendSms.setLayoutData(fd_btnSendSms);
-		btnSendSms.setText("Send Sms");
 
 		Label label_3 = new Label(shell, SWT.SEPARATOR | SWT.HORIZONTAL);
 		fd_tabFolder.bottom = new FormAttachment(label_3, -6);
@@ -433,6 +456,9 @@ public class ManualEntryDialog extends Dialog {
 		label_3.setLayoutData(fd_label_3);
 
 		Button btnReset = new Button(shell, SWT.NONE);
+		btnReset.setToolTipText("Reset");
+		btnReset.setImage(ResourceManager.getPluginImage(
+				"com.intut.luckylottery.cms", "icons/appIcons/reset-b-w.png"));
 		btnReset.setSelection(true);
 		btnReset.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -447,7 +473,6 @@ public class ManualEntryDialog extends Dialog {
 		fd_btnReset.bottom = new FormAttachment(btnNewButton, 0, SWT.BOTTOM);
 		fd_btnReset.right = new FormAttachment(btnSendSms, -6);
 		btnReset.setLayoutData(fd_btnReset);
-		btnReset.setText("Reset");
 		m_bindingContext = initDataBindings();
 
 	}
