@@ -81,6 +81,7 @@ public class DataLoaderDialog extends Dialog {
 	 */
 	private void createContents() {
 		String comboItems[] = GetDummyData.getBumperNames();
+		String comboText=GetDummyData.getSelectedBumper();
 		// shlUploadFiles = new Shell(getParent());
 		// shlUploadFiles.setSize(450, 412);
 		shlUploadFiles = new Shell(getParent(), SWT.DIALOG_TRIM
@@ -156,7 +157,7 @@ public class DataLoaderDialog extends Dialog {
 		fd_combo.left = new FormAttachment(lblChooseFile, 0, SWT.LEFT);
 		combo.setLayoutData(fd_combo);
 		combo.setItems(comboItems);
-		combo.setText(combo.getItem(0));
+		combo.setText(comboText);
 		Button btnLoad_1 = new Button(composite, SWT.NONE);
 		btnLoad_1.setImage(ResourceManager.getPluginImage(
 				"com.intut.luckylottery.cms", "icons/appIcons/upload.png"));
@@ -375,7 +376,7 @@ public class DataLoaderDialog extends Dialog {
 		fd_combo_1.left = new FormAttachment(0, 10);
 		combo_1.setLayoutData(fd_combo_1);
 		combo_1.setItems(comboItems);
-		combo_1.setText(combo_1.getItem(0));
+		combo_1.setText(comboText);
 		Button btnLoadData = new Button(composite_2, SWT.NONE);
 		btnLoadData.setImage(ResourceManager.getPluginImage(
 				"com.intut.luckylottery.cms", "icons/appIcons/upload.png"));

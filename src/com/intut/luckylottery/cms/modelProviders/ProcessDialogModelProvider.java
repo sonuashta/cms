@@ -93,6 +93,7 @@ public class ProcessDialogModelProvider {
 				.getCurrent().getActiveShell(), customers, false, getMessage(),
 				name, this);
 		dialog.open();
+		resetData();
 	}
 
 	public void processMails() throws Exception {

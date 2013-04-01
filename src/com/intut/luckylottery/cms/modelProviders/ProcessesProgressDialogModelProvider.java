@@ -89,10 +89,6 @@ public class ProcessesProgressDialogModelProvider {
 
 	public Message sendSms(String messageText, String number) {
 		Message message1 = new Message();
-		message1.setCode(200);
-		message1.setMessage("Testing");
-		if (message1.getCode() == 200)
-			return message1;
 		String str;
 
 		if (Util.isStringNullOrEmpty(messageText))

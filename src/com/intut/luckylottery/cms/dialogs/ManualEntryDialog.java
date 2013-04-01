@@ -56,6 +56,9 @@ public class ManualEntryDialog extends Dialog {
 	private Button btnNewButton;
 	private Combo combo_1;
 	private Combo combo;
+	private Text text_8;
+	private Button btnCheckButton;
+	private Label lblLength;
 
 	/**
 	 * Create the dialog.
@@ -224,7 +227,7 @@ public class ManualEntryDialog extends Dialog {
 		fd_grpCustomerInformation.right = new FormAttachment(100, -471);
 		FormData fd_tabFolder = new FormData();
 		fd_tabFolder.left = new FormAttachment(grpCustomerInformation, 6);
-		fd_tabFolder.top = new FormAttachment(0, 10);
+		fd_tabFolder.top = new FormAttachment(0, 143);
 		tabFolder.setLayoutData(fd_tabFolder);
 
 		TabItem tbtmMonthly = new TabItem(tabFolder, SWT.NONE);
@@ -247,7 +250,7 @@ public class ManualEntryDialog extends Dialog {
 		text_2 = new Text(composite, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL
 				| SWT.MULTI);
 		FormData fd_text_2 = new FormData();
-		fd_text_2.bottom = new FormAttachment(lblTicketNumber, 394, SWT.BOTTOM);
+		fd_text_2.bottom = new FormAttachment(100, -10);
 		fd_text_2.top = new FormAttachment(lblTicketNumber, 6);
 		fd_text_2.left = new FormAttachment(0, 10);
 		fd_text_2.right = new FormAttachment(100, -10);
@@ -272,7 +275,7 @@ public class ManualEntryDialog extends Dialog {
 		text_3 = new Text(composite_1, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL
 				| SWT.MULTI);
 		FormData fd_text_3 = new FormData();
-		fd_text_3.bottom = new FormAttachment(lblNewLabel_1, 396, SWT.BOTTOM);
+		fd_text_3.bottom = new FormAttachment(100, -10);
 		fd_text_3.left = new FormAttachment(0, 10);
 		fd_text_3.right = new FormAttachment(100, -10);
 		text_3.setLayoutData(fd_text_3);
@@ -311,16 +314,15 @@ public class ManualEntryDialog extends Dialog {
 
 		Label label_1 = new Label(composite_2, SWT.SEPARATOR | SWT.HORIZONTAL);
 		FormData fd_label_1 = new FormData();
-		fd_label_1.left = new FormAttachment(0, 10);
+		fd_label_1.left = new FormAttachment(lblMonthlyTickets, 0, SWT.LEFT);
 		fd_label_1.right = new FormAttachment(100, -10);
 		label_1.setLayoutData(fd_label_1);
 
 		Label lblBumper = new Label(composite_2, SWT.NONE);
-		fd_label_1.bottom = new FormAttachment(lblBumper, -6);
 		lblBumper.setFont(SWTResourceManager.getFont("Segoe UI", 10, SWT.BOLD));
 		FormData fd_lblBumper = new FormData();
-		fd_lblBumper.left = new FormAttachment(0, 10);
-		fd_lblBumper.top = new FormAttachment(0, 223);
+		fd_lblBumper.top = new FormAttachment(label_1, 6);
+		fd_lblBumper.left = new FormAttachment(lblMonthlyTickets, 0, SWT.LEFT);
 		lblBumper.setLayoutData(fd_lblBumper);
 		lblBumper.setText("Bumper Ticket(s)");
 
@@ -328,8 +330,9 @@ public class ManualEntryDialog extends Dialog {
 				| SWT.MULTI);
 		fd_label_1.top = new FormAttachment(text_5, 6);
 		FormData fd_text_5 = new FormData();
+		fd_text_5.bottom = new FormAttachment(100, -145);
 		fd_text_5.top = new FormAttachment(lblMonthlyTickets, 6);
-		fd_text_5.bottom = new FormAttachment(100, -222);
+		
 		fd_text_5.left = new FormAttachment(0, 10);
 		fd_text_5.right = new FormAttachment(100, -10);
 		text_5.setLayoutData(fd_text_5);
@@ -337,21 +340,21 @@ public class ManualEntryDialog extends Dialog {
 		text_7 = new Text(composite_2, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL
 				| SWT.MULTI);
 		FormData fd_text_7 = new FormData();
+		fd_text_7.top = new FormAttachment(lblBumper, 13);
 		fd_text_7.bottom = new FormAttachment(100, -10);
 		fd_text_7.left = new FormAttachment(0, 10);
 		fd_text_7.right = new FormAttachment(100, -10);
 		text_7.setLayoutData(fd_text_7);
 
 		combo_1 = new Combo(composite_2, SWT.READ_ONLY);
-		fd_text_7.top = new FormAttachment(combo_1, 6);
 		FormData fd_combo_1 = new FormData();
-		fd_combo_1.top = new FormAttachment(lblBumper, -1, SWT.TOP);
+		fd_combo_1.top = new FormAttachment(label_1, 6);
 		fd_combo_1.right = new FormAttachment(label_1, 0, SWT.RIGHT);
 		combo_1.setLayoutData(fd_combo_1);
 		combo_1.setItems(GetDummyData.getBumperNames());
 		Label lblNewLabel_2 = new Label(composite_2, SWT.NONE);
 		FormData fd_lblNewLabel_2 = new FormData();
-		fd_lblNewLabel_2.bottom = new FormAttachment(lblBumper, 0, SWT.BOTTOM);
+		fd_lblNewLabel_2.top = new FormAttachment(lblBumper, 2, SWT.TOP);
 		fd_lblNewLabel_2.right = new FormAttachment(combo_1, -6);
 		lblNewLabel_2.setLayoutData(fd_lblNewLabel_2);
 		lblNewLabel_2.setText("Select Bumper");
@@ -427,6 +430,19 @@ public class ManualEntryDialog extends Dialog {
 					if (!result)
 						return;
 				}
+				if (modelProvider.getCustomMessage().length()>158) {
+					boolean result = MessageDialog.openConfirm(shell,
+							"Are you sure?",
+							"Message length exceeded, Still want to send this message?");
+					if (!result)
+						return;
+				}
+				if (modelProvider.getPhoneNumber().length()<6) {
+					 MessageDialog.openError(shell,"Error",
+							"Phone Number lenght must be greater than 5");
+					
+						return;
+				}
 				modelProvider.logMessage();
 				if (!modelProvider.sendAndDisplayMessage()) {
 					MessageDialog.openError(shell, "Error",
@@ -473,104 +489,109 @@ public class ManualEntryDialog extends Dialog {
 		fd_btnReset.bottom = new FormAttachment(btnNewButton, 0, SWT.BOTTOM);
 		fd_btnReset.right = new FormAttachment(btnSendSms, -6);
 		btnReset.setLayoutData(fd_btnReset);
+		
+		Group grpMessage = new Group(shell, SWT.NONE);
+		grpMessage.setText("Message");
+		grpMessage.setLayout(new FormLayout());
+		FormData fd_grpMessage = new FormData();
+		fd_grpMessage.bottom = new FormAttachment(tabFolder, -6);
+		fd_grpMessage.top = new FormAttachment(grpCustomerInformation, 0, SWT.TOP);
+		fd_grpMessage.right = new FormAttachment(tabFolder, 0, SWT.RIGHT);
+		fd_grpMessage.left = new FormAttachment(grpCustomerInformation, 6);
+		grpMessage.setLayoutData(fd_grpMessage);
+		
+		text_8 = new Text(grpMessage, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		FormData fd_text_8 = new FormData();
+		fd_text_8.bottom = new FormAttachment(100, -10);
+		fd_text_8.right = new FormAttachment(100, -10);
+		fd_text_8.top = new FormAttachment(0, 25);
+		fd_text_8.left = new FormAttachment(0, 7);
+		text_8.setLayoutData(fd_text_8);
+		
+		btnCheckButton = new Button(grpMessage, SWT.CHECK);
+		FormData fd_btnCheckButton = new FormData();
+		fd_btnCheckButton.bottom = new FormAttachment(text_8, -6);
+		fd_btnCheckButton.left = new FormAttachment(text_8, 0, SWT.LEFT);
+		btnCheckButton.setLayoutData(fd_btnCheckButton);
+		btnCheckButton.setText("Default Message");
+		
+		lblLength = new Label(grpMessage, SWT.RIGHT);
+		FormData fd_lblLength = new FormData();
+		fd_lblLength.top = new FormAttachment(btnCheckButton, 0, SWT.TOP);
+		fd_lblLength.left = new FormAttachment(btnCheckButton, 6);
+		fd_lblLength.right = new FormAttachment(100, -10);
+		lblLength.setLayoutData(fd_lblLength);
+		lblLength.setText("Length");
 		m_bindingContext = initDataBindings();
 
 	}
-
 	protected DataBindingContext initDataBindings() {
 		DataBindingContext bindingContext = new DataBindingContext();
 		//
-		IObservableValue textObserveTextObserveWidget = SWTObservables
-				.observeText(text, SWT.Modify);
-		IObservableValue modelProviderNameObserveValue = BeansObservables
-				.observeValue(modelProvider, "name");
-		bindingContext.bindValue(textObserveTextObserveWidget,
-				modelProviderNameObserveValue, null, null);
+		IObservableValue textObserveTextObserveWidget = SWTObservables.observeText(text, SWT.Modify);
+		IObservableValue modelProviderNameObserveValue = BeansObservables.observeValue(modelProvider, "name");
+		bindingContext.bindValue(textObserveTextObserveWidget, modelProviderNameObserveValue, null, null);
 		//
-		IObservableValue text_1ObserveTextObserveWidget = SWTObservables
-				.observeText(text_1, SWT.Modify);
-		IObservableValue modelProviderPhoneNumberObserveValue = BeansObservables
-				.observeValue(modelProvider, "phoneNumber");
-		bindingContext.bindValue(text_1ObserveTextObserveWidget,
-				modelProviderPhoneNumberObserveValue, null, null);
+		IObservableValue text_1ObserveTextObserveWidget = SWTObservables.observeText(text_1, SWT.Modify);
+		IObservableValue modelProviderPhoneNumberObserveValue = BeansObservables.observeValue(modelProvider, "phoneNumber");
+		bindingContext.bindValue(text_1ObserveTextObserveWidget, modelProviderPhoneNumberObserveValue, null, null);
 		//
-		IObservableValue dateTimeObserveSelectionObserveWidget = SWTObservables
-				.observeSelection(dateTime);
-		IObservableValue modelProviderDateObserveValue = BeansObservables
-				.observeValue(modelProvider, "date");
-		bindingContext.bindValue(dateTimeObserveSelectionObserveWidget,
-				modelProviderDateObserveValue, null, null);
+		IObservableValue dateTimeObserveSelectionObserveWidget = SWTObservables.observeSelection(dateTime);
+		IObservableValue modelProviderDateObserveValue = BeansObservables.observeValue(modelProvider, "date");
+		bindingContext.bindValue(dateTimeObserveSelectionObserveWidget, modelProviderDateObserveValue, null, null);
 		//
-		IObservableValue text_4ObserveTextObserveWidget = SWTObservables
-				.observeText(text_4, SWT.Modify);
-		IObservableValue modelProviderEmailIdObserveValue = BeansObservables
-				.observeValue(modelProvider, "emailId");
-		bindingContext.bindValue(text_4ObserveTextObserveWidget,
-				modelProviderEmailIdObserveValue, null, null);
+		IObservableValue text_4ObserveTextObserveWidget = SWTObservables.observeText(text_4, SWT.Modify);
+		IObservableValue modelProviderEmailIdObserveValue = BeansObservables.observeValue(modelProvider, "emailId");
+		bindingContext.bindValue(text_4ObserveTextObserveWidget, modelProviderEmailIdObserveValue, null, null);
 		//
-		IObservableValue text_6ObserveTextObserveWidget = SWTObservables
-				.observeText(text_6, SWT.Modify);
-		IObservableValue modelProviderAddressObserveValue = BeansObservables
-				.observeValue(modelProvider, "address");
-		bindingContext.bindValue(text_6ObserveTextObserveWidget,
-				modelProviderAddressObserveValue, null, null);
+		IObservableValue text_6ObserveTextObserveWidget = SWTObservables.observeText(text_6, SWT.Modify);
+		IObservableValue modelProviderAddressObserveValue = BeansObservables.observeValue(modelProvider, "address");
+		bindingContext.bindValue(text_6ObserveTextObserveWidget, modelProviderAddressObserveValue, null, null);
 		//
-		IObservableValue serialNumberTextObserveTextObserveWidget = SWTObservables
-				.observeText(serialNumberText, SWT.Modify);
-		IObservableValue modelProviderSerialNumberObserveValue = BeansObservables
-				.observeValue(modelProvider, "serialNumber");
-		bindingContext.bindValue(serialNumberTextObserveTextObserveWidget,
-				modelProviderSerialNumberObserveValue, null, null);
+		IObservableValue serialNumberTextObserveTextObserveWidget = SWTObservables.observeText(serialNumberText, SWT.Modify);
+		IObservableValue modelProviderSerialNumberObserveValue = BeansObservables.observeValue(modelProvider, "serialNumber");
+		bindingContext.bindValue(serialNumberTextObserveTextObserveWidget, modelProviderSerialNumberObserveValue, null, null);
 		//
-		IObservableValue text_2ObserveTextObserveWidget = SWTObservables
-				.observeText(text_2, SWT.Modify);
-		IObservableValue modelProviderMonthlyTicketsObserveValue = BeansObservables
-				.observeValue(modelProvider, "monthlyTickets");
-		bindingContext.bindValue(text_2ObserveTextObserveWidget,
-				modelProviderMonthlyTicketsObserveValue, null, null);
+		IObservableValue text_2ObserveTextObserveWidget = SWTObservables.observeText(text_2, SWT.Modify);
+		IObservableValue modelProviderMonthlyTicketsObserveValue = BeansObservables.observeValue(modelProvider, "monthlyTickets");
+		bindingContext.bindValue(text_2ObserveTextObserveWidget, modelProviderMonthlyTicketsObserveValue, null, null);
 		//
-		IObservableValue text_3ObserveTextObserveWidget = SWTObservables
-				.observeText(text_3, SWT.Modify);
-		IObservableValue modelProviderBumperTicketsObserveValue = BeansObservables
-				.observeValue(modelProvider, "bumperTickets");
-		bindingContext.bindValue(text_3ObserveTextObserveWidget,
-				modelProviderBumperTicketsObserveValue, null, null);
+		IObservableValue text_3ObserveTextObserveWidget = SWTObservables.observeText(text_3, SWT.Modify);
+		IObservableValue modelProviderBumperTicketsObserveValue = BeansObservables.observeValue(modelProvider, "bumperTickets");
+		bindingContext.bindValue(text_3ObserveTextObserveWidget, modelProviderBumperTicketsObserveValue, null, null);
 		//
-		IObservableValue text_5ObserveTextObserveWidget = SWTObservables
-				.observeText(text_5, SWT.Modify);
-		bindingContext.bindValue(text_5ObserveTextObserveWidget,
-				modelProviderMonthlyTicketsObserveValue, null, null);
+		IObservableValue text_5ObserveTextObserveWidget = SWTObservables.observeText(text_5, SWT.Modify);
+		bindingContext.bindValue(text_5ObserveTextObserveWidget, modelProviderMonthlyTicketsObserveValue, null, null);
 		//
-		IObservableValue text_7ObserveTextObserveWidget = SWTObservables
-				.observeText(text_7, SWT.Modify);
-		bindingContext.bindValue(text_7ObserveTextObserveWidget,
-				modelProviderBumperTicketsObserveValue, null, null);
+		IObservableValue text_7ObserveTextObserveWidget = SWTObservables.observeText(text_7, SWT.Modify);
+		bindingContext.bindValue(text_7ObserveTextObserveWidget, modelProviderBumperTicketsObserveValue, null, null);
 		//
-		IObservableValue btnSendSmsObserveEnabledObserveWidget = SWTObservables
-				.observeEnabled(btnSendSms);
-		IObservableValue modelProviderSendSMSButtonObserveValue = BeansObservables
-				.observeValue(modelProvider, "sendSMSButton");
-		bindingContext.bindValue(btnSendSmsObserveEnabledObserveWidget,
-				modelProviderSendSMSButtonObserveValue, null, null);
+		IObservableValue btnSendSmsObserveEnabledObserveWidget = SWTObservables.observeEnabled(btnSendSms);
+		IObservableValue modelProviderSendSMSButtonObserveValue = BeansObservables.observeValue(modelProvider, "sendSMSButton");
+		bindingContext.bindValue(btnSendSmsObserveEnabledObserveWidget, modelProviderSendSMSButtonObserveValue, null, null);
 		//
-		IObservableValue btnNewButtonObserveEnabledObserveWidget = SWTObservables
-				.observeEnabled(btnNewButton);
-		IObservableValue modelProviderSaveToDatabaseObserveValue = BeansObservables
-				.observeValue(modelProvider, "saveToDatabase");
-		bindingContext.bindValue(btnNewButtonObserveEnabledObserveWidget,
-				modelProviderSaveToDatabaseObserveValue, null, null);
+		IObservableValue btnNewButtonObserveEnabledObserveWidget = SWTObservables.observeEnabled(btnNewButton);
+		IObservableValue modelProviderSaveToDatabaseObserveValue = BeansObservables.observeValue(modelProvider, "saveToDatabase");
+		bindingContext.bindValue(btnNewButtonObserveEnabledObserveWidget, modelProviderSaveToDatabaseObserveValue, null, null);
 		//
-		IObservableValue combo_1ObserveSelectionObserveWidget = SWTObservables
-				.observeSelection(combo_1);
-		IObservableValue modelProviderSelectedBumperObserveValue = BeansObservables
-				.observeValue(modelProvider, "selectedBumper");
-		bindingContext.bindValue(combo_1ObserveSelectionObserveWidget,
-				modelProviderSelectedBumperObserveValue, null, null);
+		IObservableValue combo_1ObserveSelectionObserveWidget = SWTObservables.observeSelection(combo_1);
+		IObservableValue modelProviderSelectedBumperObserveValue = BeansObservables.observeValue(modelProvider, "selectedBumper");
+		bindingContext.bindValue(combo_1ObserveSelectionObserveWidget, modelProviderSelectedBumperObserveValue, null, null);
 		//
-		IObservableValue comboObserveSelectionObserveWidget = SWTObservables
-				.observeSelection(combo);
-		bindingContext.bindValue(comboObserveSelectionObserveWidget,
-				modelProviderSelectedBumperObserveValue, null, null);
+		IObservableValue comboObserveSelectionObserveWidget = SWTObservables.observeSelection(combo);
+		bindingContext.bindValue(comboObserveSelectionObserveWidget, modelProviderSelectedBumperObserveValue, null, null);
+		//
+		IObservableValue btnCheckButtonObserveSelectionObserveWidget = SWTObservables.observeSelection(btnCheckButton);
+		IObservableValue modelProviderCustomSelectedObserveValue = BeansObservables.observeValue(modelProvider, "customSelected");
+		bindingContext.bindValue(btnCheckButtonObserveSelectionObserveWidget, modelProviderCustomSelectedObserveValue, null, null);
+		//
+		IObservableValue lblLengthObserveTextObserveWidget = SWTObservables.observeText(lblLength);
+		IObservableValue modelProviderMessageLengthObserveValue = BeansObservables.observeValue(modelProvider, "messageLength");
+		bindingContext.bindValue(lblLengthObserveTextObserveWidget, modelProviderMessageLengthObserveValue, null, null);
+		//
+		IObservableValue text_8ObserveTextObserveWidget = SWTObservables.observeText(text_8, SWT.Modify);
+		IObservableValue modelProviderCustomMessageObserveValue = BeansObservables.observeValue(modelProvider, "customMessage");
+		bindingContext.bindValue(text_8ObserveTextObserveWidget, modelProviderCustomMessageObserveValue, null, null);
 		//
 		return bindingContext;
 	}

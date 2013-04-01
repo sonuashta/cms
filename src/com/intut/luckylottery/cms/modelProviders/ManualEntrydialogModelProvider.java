@@ -38,6 +38,9 @@ public class ManualEntrydialogModelProvider {
 		setSerialNumber("" + startingSerialNumber);
 		customers = new ArrayList<Customer>();
 		setDate(new Date());
+		defaultMessage = dbLoader.getDefaultMessage();
+		setCustomMessage("");
+		setCustomSelected(false);
 		setConfigBumper(dbLoader.getSelectedBumper());
 	}
 
@@ -45,6 +48,7 @@ public class ManualEntrydialogModelProvider {
 		mobileText = text;
 	}
 
+	private String defaultMessage;
 	private String configBumper;
 	private Text mobileText;
 	private boolean dbStatus;
@@ -58,7 +62,43 @@ public class ManualEntrydialogModelProvider {
 	private NewCustomer newCustomer;
 	private String monthlyTickets;
 	private String bumperTickets;
+	private String customMessage;
 
+	public String getCustomMessage() {
+		return customMessage;
+	}
+
+	public void setCustomMessage(String customMessage) {
+		setMessageLength("Message length is " + customMessage.length());
+		propertyChangeSupport.firePropertyChange("customMessage",
+				this.customMessage, this.customMessage = customMessage);
+	}
+
+	public String getMessageLength() {
+		return messageLength;
+	}
+
+	public void setMessageLength(String messageLength) {
+		propertyChangeSupport.firePropertyChange("messageLength",
+				this.messageLength, this.messageLength = messageLength);
+	}
+
+	public boolean isCustomSelected() {
+		return customSelected;
+	}
+
+	public void setCustomSelected(boolean customSelected) {
+		if (customSelected)
+			setCustomMessage(defaultMessage + " " + filterDefaultMessageText());
+		else {
+			setCustomMessage(filterMessageText());
+		}
+		propertyChangeSupport.firePropertyChange("customSelected",
+				this.customSelected, this.customSelected = customSelected);
+	}
+
+	private String messageLength;
+	private boolean customSelected;
 	private Dbloader dbLoader;
 	private int startingSerialNumber;
 	private List<Customer> customers;
@@ -269,16 +309,19 @@ public class ManualEntrydialogModelProvider {
 
 					monitor.setTaskName("Sending Message where message is "
 							+ filterMessageText());
-					Message message = sendSms();
-					boolean isMessageSend = false;
-					if (message.getCode() == HttpURLConnection.HTTP_OK)
-						isMessageSend = true;
-
-					monitor.worked(2);
-					monitor.setTaskName("Saving to database");
-					// TODO add mail send functionality
-					boolean isMailSend = true;
 					try {
+						Message message = sendSms();
+						boolean isMessageSend = false;
+						if (message.getCode() == HttpURLConnection.HTTP_OK)
+							isMessageSend = true;
+
+						monitor.worked(2);
+						monitor.setTaskName("Saving to database");
+						// TODO add mail send functionality
+						boolean isMailSend = true;
+						LotteryLogger.getInstance().setInfo(
+								"Message sent to" + message.getMessage()
+										+ getCustomMessage());
 						dbLoader.savePendings(getCustomers(), isMessageSend,
 								isMailSend, message.getMessage()
 										+ ",and code is " + message.getCode());
@@ -329,8 +372,7 @@ public class ManualEntrydialogModelProvider {
 				messageText += "bumper tickets count is " + bumperCount
 						+ ", and ";
 			messageText += "monthly count is " + monthlyCount
-					+ (monthlyCount + bumperCount) + ", where bumper count is "
-					+ bumperCount + " and monthly count is " + monthlyCount;
+					+ " Total count is " + (monthlyCount + bumperCount) + ".";
 		} else {
 			String message = "Your bumper tickets are ";
 			if (!Util.isStringNullOrEmpty(bumperTickets)) {
@@ -343,11 +385,51 @@ public class ManualEntrydialogModelProvider {
 				message = "";
 			}
 
-			message += "Your monthly tickets are ";
+			if (!Util.isStringNullOrEmpty(monthlyTickets)) {
+				message += "Your monthly tickets are ";
+				for (String s : monthlyTickets.split(",")) {
+					message += s + ",";
+				}
+			} else {
+				message = message.replaceAll(" and ", "");
+			}
+			messageText += message.replaceAll(",$", "");
+		}
+		return messageText
+				+ ". for info www.luckylotteryagency.com, 9815788878";
+	}
+
+	private String filterDefaultMessageText() {
+		String messageText = "";
+		int monthlyCount = getMonthlyTicketCount();
+		int bumperCount = getBumperTicketCount();
+		if ((monthlyCount + bumperCount) >= 5) {
+			messageText += "Your ";
+			if (bumperCount > 0)
+				messageText += "bumper count is " + bumperCount + ", and ";
+			messageText += "monthly count is " + monthlyCount
+					+ " Total count is " + (monthlyCount + bumperCount) + ".";
+		} else {
+			String message = "Your tickets are ";
+			if (!Util.isStringNullOrEmpty(bumperTickets)) {
+				for (String s : bumperTickets.split(",")) {
+					message += s + ",";
+
+				}
+				if (Util.isStringNullOrEmpty(monthlyTickets)) {
+					message = message.replaceAll(",$", "") + "";
+				}
+
+			} else {
+				message = "Your tickets are ";
+			}
+
 			if (!Util.isStringNullOrEmpty(monthlyTickets)) {
 				for (String s : monthlyTickets.split(",")) {
 					message += s + ",";
 				}
+			} else {
+				message = message.replaceAll(" and ", "");
 			}
 			messageText += message.replaceAll(",$", "");
 		}
@@ -359,7 +441,7 @@ public class ManualEntrydialogModelProvider {
 		Message message = new Message();
 		String str;
 
-		String messageText = filterMessageText();
+		String messageText = getCustomMessage();
 		if (Util.isStringNullOrEmpty(messageText))
 			messageText = "empty";
 		try {
@@ -411,6 +493,7 @@ public class ManualEntrydialogModelProvider {
 	}
 
 	public void setMonthlyTickets(String monthlyTickets) {
+
 		if (Util.isStringNullOrEmpty(monthlyTickets)
 				&& Util.isStringNullOrEmpty(bumperTickets)) {
 			setSaveToDatabase(false);
@@ -422,6 +505,7 @@ public class ManualEntrydialogModelProvider {
 		}
 		propertyChangeSupport.firePropertyChange("monthlyTickets",
 				this.monthlyTickets, this.monthlyTickets = monthlyTickets);
+		setCustomSelected(customSelected);
 	}
 
 	public String getBumperTickets() {
@@ -429,6 +513,7 @@ public class ManualEntrydialogModelProvider {
 	}
 
 	public void setBumperTickets(String bumperTickets) {
+
 		if (Util.isStringNullOrEmpty(monthlyTickets)
 				&& Util.isStringNullOrEmpty(bumperTickets)) {
 			setSaveToDatabase(false);
@@ -440,6 +525,7 @@ public class ManualEntrydialogModelProvider {
 		}
 		propertyChangeSupport.firePropertyChange("bumperTickets",
 				this.bumperTickets, this.bumperTickets = bumperTickets);
+		setCustomSelected(customSelected);
 	}
 
 	public boolean isSendSMSButton() {
@@ -486,6 +572,7 @@ public class ManualEntrydialogModelProvider {
 	}
 
 	public void setConfigBumper(String configBumper) {
+		setSelectedBumper(configBumper);
 		this.configBumper = configBumper;
 	}
 
