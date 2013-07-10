@@ -97,9 +97,9 @@ public class ProcessesProgressDialogModelProvider {
 			URI uri = new URI("http", messageText, "");
 
 			// URL onlyMsgUrl = uri.toURL();
-
+			
 			URL msgUrl = new URL(
-					"http://dndopen.dove-sms.com/SMSAPI.jsp?username="
+					Util.getSMSUrl()+"?username="
 							+ Util.getUserName() + "&password="
 							+ Util.getPassword() + "&sendername="
 							+ Util.getSenderName() + "&mobileno=91" + number

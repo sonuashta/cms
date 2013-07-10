@@ -20,7 +20,6 @@ import com.intut.luckylottery.cms.domain.Customer;
 import com.intut.luckylottery.cms.domain.Lottery;
 import com.intut.luckylottery.cms.dummydata.GetDummyData;
 
-
 public final class Util {
 
 	public static String unWrapQuotes(String quotedString) {
@@ -136,6 +135,10 @@ public final class Util {
 	public static String getRelativePath() {
 		File file = new File("");
 		return file.getAbsolutePath();
+	}
+
+	public static String getSMSUrl() {
+		return "http://dndopen.dove-sms.com/TransSMS/SMSAPI.jsp";
 	}
 
 	public static String getUserName() {
