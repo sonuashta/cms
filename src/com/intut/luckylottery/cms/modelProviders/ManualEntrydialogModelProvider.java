@@ -25,6 +25,7 @@ import com.intut.luckylottery.cms.domain.Message;
 import com.intut.luckylottery.cms.domain.NewCustomer;
 import com.intut.luckylottery.cms.util.Constants;
 import com.intut.luckylottery.cms.util.LotteryLogger;
+import com.intut.luckylottery.cms.util.SmsCredential;
 import com.intut.luckylottery.cms.util.Util;
 
 public class ManualEntrydialogModelProvider {
@@ -449,13 +450,12 @@ public class ManualEntrydialogModelProvider {
 
 			// URL onlyMsgUrl = uri.toURL();
 
-			URL msgUrl = new URL(
-					Util.getSMSUrl()+"?username="
-							+ Util.getUserName() + "&password="
-							+ Util.getPassword() + "&sendername="
-							+ Util.getSenderName() + "&mobileno=91"
-							+ getPhoneNumber() + "&message="
-							+ uri.toString().replace("http:", ""));
+			URL msgUrl = new URL(SmsCredential.getInstance().getUrl() + "?"
+					+ SmsCredential.getInstance().getOtherParams() + "&"
+					+ SmsCredential.getInstance().getMobileKey() + "=91"
+					+ getPhoneNumber() + "&"
+					+ SmsCredential.getInstance().getMessageKey() + "="
+					+ uri.toString().replace("http:", ""));
 
 			HttpURLConnection connection = (HttpURLConnection) msgUrl
 					.openConnection();

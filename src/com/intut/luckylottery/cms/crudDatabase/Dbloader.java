@@ -18,6 +18,7 @@ import com.intut.luckylottery.cms.util.Util;
 
 public class Dbloader {
 	public Dbloader() {
+		LotteryLogger.getInstance().setInfo("dB LOADING");
 		init();
 	}
 
@@ -25,6 +26,7 @@ public class Dbloader {
 		Connection connection;
 		try {
 			Class.forName("org.sqlite.JDBC");
+			System.out.println(new File("lottery.db").getAbsolutePath());
 			connection = DriverManager.getConnection("jdbc:sqlite:lottery.db");
 			return connection;
 		} catch (Exception e) {
